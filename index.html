@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+<title>Tótem&amp;GO</title>
+<meta name="theme-color" content="#0F6B5C">
+<meta name="description" content="Tótem&GO · Gestión de tiendas, fichajes y documentos">
+
+<!-- ==================== PWA / MOBILE APP META ==================== -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tótem&GO">
+<link rel="apple-touch-icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230F6B5C"/><rect x="30" y="30" width="40" height="10" rx="4" fill="white"/><rect x="24" y="45" width="52" height="10" rx="4" fill="white"/><rect x="36" y="60" width="28" height="14" rx="4" fill="%23E8A33D"/></svg>'>
+<link rel="manifest" href='data:application/manifest+json,{"name":"T%C3%B3tem%26GO","short_name":"T%C3%B3temGO","start_url":".","display":"standalone","orientation":"portrait","background_color":"%23FAF9F6","theme_color":"%230F6B5C","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' rx=\'22\' fill=\'%230F6B5C\'/%3E%3Crect x=\'30\' y=\'30\' width=\'40\' height=\'10\' rx=\'4\' fill=\'white\'/%3E%3Crect x=\'24\' y=\'45\' width=\'52\' height=\'10\' rx=\'4\' fill=\'white\'/%3E%3Crect x=\'36\' y=\'60\' width=\'28\' height=\'14\' rx=\'4\' fill=\'%23E8A33D\'/%3E%3C/svg%3E","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}'>
+
+<!-- ==================== FONTS ==================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
+
+<!-- ==================== TAILWIND CSS (CDN) ==================== -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- ==================== SHEETJS (exportar Excel) ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: { display: ['Plus Jakarta Sans', 'sans-serif'] },
+        colors: {
+          amber:     { DEFAULT: '#E8A33D', 50:'#FDF3E3', 600:'#E8A33D', 700:'#C9821E' },
+          ink:       '#1A2420',
+          surface:   '#FAF9F6',
+          surfacedark: '#0F1512',
+          carddark:  '#182420',
+        },
+        boxShadow: {
+          soft: '0 2px 10px -2px rgba(15,107,92,0.10), 0 8px 24px -8px rgba(15,107,92,0.12)',
+          liftup: '0 12px 30px -10px rgba(15,107,92,0.35)',
+        },
+        borderRadius: { '2xl': '1.25rem', '3xl': '1.75rem' }
+      }
+    }
+  }
+</script>
+
+<style>
+  /* ============ THEME (colores dinámicos vía CSS variables) ============ */
+  :root{
+    --c-primary: #0F6B5C;
+    --c-primary-dark: #0B4F44;
+    --c-primary-darker: #083A32;
+    --c-primary-50: #E7F3F0;
+    --c-primary-100: #CFE7E1;
+    --c-primary-rgb: 15,107,92;
+    --c-contrast: #7fd8c5;
+    font-variant-numeric: tabular-nums;
+  }
+  html, body { font-family: 'Plus Jakarta Sans', sans-serif; overscroll-behavior-y: none; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: rgba(var(--c-primary-rgb),0.25); border-radius: 999px; }
+  .no-scrollbar::-webkit-scrollbar{ display:none; }
+  .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+
+  .totem-mark { display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .totem-mark span{ display:block; border-radius: 6px; background: linear-gradient(135deg,var(--c-primary),var(--c-primary-dark)); }
+  .totem-mark span:nth-child(1){ width:18px; height:6px; }
+  .totem-mark span:nth-child(2){ width:24px; height:6px; }
+  .totem-mark span:nth-child(3){ width:14px; height:10px; background:linear-gradient(135deg,#E8A33D,#c9821e); }
+
+  .nav-pill{ transition: all .25s cubic-bezier(.2,.8,.2,1); }
+  .nav-item.active .nav-pill{ background: var(--c-primary); }
+  .nav-item.active .nav-icon{ color: #fff; }
+  .nav-item .nav-label{ color:#6b7a76; }
+  .nav-item.active .nav-label{ color: var(--c-primary-dark); font-weight:700; }
+  .dark .nav-item.active .nav-label{ color: var(--c-contrast); }
+
+  @keyframes totem-pulse { 0%{ box-shadow:0 0 0 0 rgba(var(--c-primary-rgb),.35);} 70%{ box-shadow:0 0 0 18px rgba(var(--c-primary-rgb),0);} 100%{ box-shadow:0 0 0 0 rgba(var(--c-primary-rgb),0);} }
+  .pulse-beacon{ animation: totem-pulse 2.2s infinite; }
+
+  .switch{ width:46px; height:26px; border-radius:999px; position:relative; transition: background .2s; }
+  .switch-dot{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:999px; background:white; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .switch.on{ background:var(--c-primary); }
+  .switch.off{ background:#c9d1cd; }
+  .switch.on .switch-dot{ transform: translateX(20px); }
+
+  .bar-track{ display:flex; align-items:flex-end; gap:10px; height:140px; }
+  .bar{ border-radius:8px 8px 3px 3px; transition: height .5s cubic-bezier(.2,.8,.2,1); min-height:4px; }
+
+  .section-fade{ animation: fadein .3s ease; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  [data-view]{ display:none; }
+  [data-view].active{ display:block; }
+  [data-subview]{ display:none; }
+  [data-subview].active{ display:block; }
+  [data-docsubview]{ display:none; }
+  [data-docsubview].active{ display:block; }
+  [data-albsubview]{ display:none; }
+  [data-albsubview].active{ display:block; }
+
+  table.grid-table{ border-collapse:separate; border-spacing:0; }
+  table.grid-table th{ position:sticky; top:0; z-index:1; }
+  table.grid-table input{ background:transparent; width:100%; }
+
+  .color-dot{ width:10px; height:10px; border-radius:999px; display:inline-block; }
+
+  .star-toggle svg{ transition: all .15s; }
+  .star-toggle.fav svg{ color:#E8A33D; fill:#E8A33D; }
+  .star-toggle:not(.fav) svg{ color:#c9d1cd; }
+  .theme-swatch{ width:34px; height:34px; border-radius:999px; border:3px solid transparent; }
+  .theme-swatch.active{ border-color: var(--c-primary-darker); }
+
+  #albaranPrintArea{ position:absolute; left:-9999px; top:0; width:210mm; background:#fff; color:#1A2420; font-family:'Plus Jakarta Sans',sans-serif; }
+
+  @media print {
+    body * { visibility:hidden !important; }
+    #app > header, nav#bottomNav, .no-print { display:none !important; }
+    .printable, .printable * { visibility:visible !important; }
+    .printable { position:absolute; inset:0; padding:20px; }
+    #albaranPrintArea{ position:static; left:auto; top:auto; width:auto; padding:16mm; }
+  }
+</style>
+</head>
+
+<body class="bg-surface text-ink dark:bg-surfacedark dark:text-surface min-h-screen font-display antialiased transition-colors duration-300">
+
+<!-- ================= SVG ICON SPRITE ================= -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="ic-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-store" viewBox="0 0 24 24"><path d="M4 9V5h16v4M4 9l1.5 4.5A2 2 0 0 0 7.4 15H8a2 2 0 0 0 2-2 2 2 0 0 0 4 0 2 2 0 0 0 2 2h.6a2 2 0 0 0 1.9-1.5L20 9M4 9h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 15v5h12v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v4.5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-doc" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12h6M9 15.5h6M9 8.5h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="ic-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="ic-star" viewBox="0 0 24 24"><path d="M12 3.5 14.6 9l6 .9-4.3 4.2 1 6-5.3-2.8L6.7 20l1-6L3.4 9.9l6-.9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="ic-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="ic-download" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4-4m4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="ic-logout" viewBox="0 0 24 24"><path d="M9 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 8l4 4-4 4M17 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-fingerprint" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 1 9 9v2M3 14v-2a9 9 0 0 1 4-7.5M12 7a5 5 0 0 1 5 5v3M7 12a5 5 0 0 1 5-5M9.5 20a10 10 0 0 1-2-2.3M12 21a12 12 0 0 1-3.2-2.8M12 21c2.2-1.6 3.5-3.9 3.9-6.5M12 11a1.5 1.5 0 0 1 1.5 1.5c0 2-1 4-2.6 5.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="ic-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7.5V19l-4 2v-8.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="ic-print" viewBox="0 0 24 24"><path d="M6 9V4h12v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="4" y="9" width="16" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 14h12v6H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-send" viewBox="0 0 24 24"><path d="m4 12 16-8-6 16-3-6-7-2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-bell" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v3.5L4 16h16l-2-3.5V9a6 6 0 0 0-6-6Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="ic-chevron-left" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-chevron-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-link" viewBox="0 0 24 24"><path d="M9 15l6-6M10 6l1-1a4 4 0 0 1 5.5 5.5l-1 1M14 18l-1 1a4 4 0 0 1-5.5-5.5l1-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-reorder" viewBox="0 0 24 24"><path d="M8 6h.01M8 12h.01M8 18h.01M16 6h.01M16 12h.01M16 18h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="ic-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-2-1.3L14 21l-2-1.3L10 21l-2-1.3L6 21V3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ic-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15 1.65 1.65 0 0 0 3.17 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-box" viewBox="0 0 24 24"><path d="M3.5 8 12 4l8.5 4M3.5 8v8L12 20l8.5-4V8M3.5 8 12 12m0 0 8.5-4M12 12v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-tag" viewBox="0 0 24 24"><path d="M11 3h6a1 1 0 0 1 1 1v6l-9.5 9.5a1 1 0 0 1-1.4 0L3.5 15.9a1 1 0 0 1 0-1.4L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="15" cy="8" r="1.4" fill="currentColor"/></symbol>
+    <symbol id="ic-chart" viewBox="0 0 24 24"><path d="M4 20V10m6 10V4m6 16v-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<!-- ================= SPLASH ================= -->
+<div id="splash" class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-surface dark:bg-surfacedark">
+  <div class="totem-mark scale-150"><span></span><span></span><span></span></div>
+  <p class="text-sm tracking-wide font-semibold" style="color:var(--c-primary-dark)">Tótem&amp;GO</p>
+</div>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="loginScreen" class="hidden fixed inset-0 z-40 bg-surface dark:bg-surfacedark flex flex-col items-center justify-center px-6">
+  <div class="totem-mark scale-[2] mb-8"><span></span><span></span><span></span></div>
+  <h1 class="text-2xl font-extrabold mb-1" style="color:var(--c-primary-darker)">Tótem&amp;GO</h1>
+  <p class="text-sm text-ink/50 dark:text-surface/50 mb-8">Acceso restringido a usuarios autorizados</p>
+  <form id="loginForm" class="w-full max-w-sm space-y-3">
+    <div>
+      <label class="text-xs font-semibold text-ink/60 dark:text-surface/60">Correo electrónico</label>
+      <input required type="email" id="loginEmail" autocomplete="username" placeholder="tu@empresa.com" class="mt-1 w-full rounded-xl border border-[var(--c-primary-100)] bg-white dark:bg-carddark px-3.5 py-3 text-sm focus:outline-none focus:ring-2" style="--tw-ring-color:var(--c-primary)">
+    </div>
+    <div>
+      <label class="text-xs font-semibold text-ink/60 dark:text-surface/60">Contraseña</label>
+      <input required type="password" id="loginPass" autocomplete="current-password" placeholder="••••••••" class="mt-1 w-full rounded-xl border border-[var(--c-primary-100)] bg-white dark:bg-carddark px-3.5 py-3 text-sm focus:outline-none focus:ring-2" style="--tw-ring-color:var(--c-primary)">
+    </div>
+    <button type="submit" id="loginBtn" class="w-full rounded-xl text-white font-bold py-3 shadow-soft transition" style="background:var(--c-primary)">Iniciar sesión</button>
+    <p id="loginError" class="text-xs text-center font-semibold text-red-600 min-h-[1rem]"></p>
+  </form>
+  <p class="text-[11px] text-ink/40 dark:text-surface/40 mt-6 text-center max-w-xs">Si no tienes acceso, pide a un administrador que cree tu usuario en Firebase Authentication.</p>
+</div>
+
+<!-- ================= APP ROOT ================= -->
+<div id="app" class="hidden flex flex-col min-h-screen">
+
+  <header class="sticky top-0 z-30 backdrop-blur bg-surface/90 dark:bg-surfacedark/90 border-b border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.3)]">
+    <div class="max-w-3xl mx-auto px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="totem-mark"><span></span><span></span><span></span></div>
+        <span class="font-extrabold text-base" style="color:var(--c-primary-dark)">Tótem&amp;GO</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="todayLabel" class="hidden sm:block text-xs text-ink/50 dark:text-surface/50 font-medium"></span>
+        <button id="avatarChipBtn" class="relative">
+          <div id="avatarChip" class="w-9 h-9 rounded-full text-white grid place-items-center text-sm font-bold shadow-soft overflow-hidden" style="background:var(--c-primary)">U</div>
+          <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white dark:bg-carddark grid place-items-center shadow-soft">
+            <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" style="color:var(--c-primary-dark)"><use href="#ic-gear"/></svg>
+          </div>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl w-full mx-auto px-4 pt-5 pb-28 flex-1">
+
+    <!-- ---------- INICIO ---------- -->
+    <section data-view="inicio" class="active section-fade">
+      <div class="rounded-3xl text-white p-6 shadow-liftup mb-5 relative overflow-hidden" style="background:linear-gradient(135deg,var(--c-primary),var(--c-primary-darker))">
+        <div class="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10"></div>
+        <p id="greetTime" class="text-sm text-white/80 font-medium">Bienvenido de nuevo</p>
+        <h2 id="greetName" class="text-2xl font-extrabold mt-0.5">Hola 👋</h2>
+        <p id="greetDate" class="text-sm text-white/70 mt-1"></p>
+        <p id="greetQuote" class="text-xs text-white/85 mt-3 italic border-t border-white/20 pt-3"></p>
+      </div>
+
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-[11px] font-semibold text-ink/40 dark:text-surface/40 uppercase tracking-wide">Tu resumen</h3>
+        <button id="btnReordenarInicio" class="flex items-center gap-1 text-[11px] font-bold" style="color:var(--c-primary-dark)">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><use href="#ic-reorder"/></svg> Reordenar
+        </button>
+      </div>
+
+      <div id="inicioBlocksContainer">
+        <div id="blockResumen">
+          <div class="grid grid-cols-3 gap-3 mb-6">
+            <div class="rounded-2xl bg-white dark:bg-carddark shadow-soft p-3.5">
+              <p class="text-[11px] text-ink/50 dark:text-surface/50 font-semibold uppercase tracking-wide">Ventas hoy</p>
+              <p id="statVentas" class="text-lg font-extrabold mt-1" style="color:var(--c-primary-dark)">0,00 €</p>
+            </div>
+            <div class="rounded-2xl bg-white dark:bg-carddark shadow-soft p-3.5">
+              <p class="text-[11px] text-ink/50 dark:text-surface/50 font-semibold uppercase tracking-wide">Costes hoy</p>
+              <p id="statCostes" class="text-lg font-extrabold text-amber-700 mt-1">0,00 €</p>
+            </div>
+            <div class="rounded-2xl bg-white dark:bg-carddark shadow-soft p-3.5">
+              <p class="text-[11px] text-ink/50 dark:text-surface/50 font-semibold uppercase tracking-wide">Balance</p>
+              <p id="statBalance" class="text-lg font-extrabold mt-1">0,00 €</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="blockFichaje">
+          <!-- === Widget: Estado del fichaje === -->
+          <div id="widgetFichaje" class="rounded-3xl bg-white dark:bg-carddark shadow-soft p-4 mb-6 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-[11px] text-ink/50 dark:text-surface/50 font-semibold uppercase tracking-wide">Fichaje de hoy</p>
+              <p id="inicioFichajeEstado" class="text-sm font-bold mt-1 truncate"></p>
+            </div>
+            <button id="btnInicioFichar" class="rounded-xl text-white text-xs font-bold px-4 py-2.5 shrink-0" style="background:var(--c-primary)"></button>
+          </div>
+        </div>
+
+        <div id="blockAccesos">
+          <!-- === Widget: Accesos rápidos === -->
+          <div id="widgetAccesos" class="mb-6">
+            <h3 class="font-bold text-sm text-ink/70 dark:text-surface/70 mb-2.5">Accesos rápidos</h3>
+            <div class="grid grid-cols-4 gap-2.5" id="accesosGrid"></div>
+          </div>
+        </div>
+
+        <div id="blockGrafico">
+          <!-- === Widget: Mini gráfico últimos 7 días === -->
+          <div id="widgetGrafico" class="rounded-3xl bg-white dark:bg-carddark shadow-soft p-4 mb-6">
+            <h3 class="font-bold text-sm text-ink/70 dark:text-surface/70 mb-3">Últimos 7 días</h3>
+            <canvas id="miniChart7d" width="600" height="140" class="w-full h-auto"></canvas>
+            <div class="flex items-center gap-4 mt-2 text-[11px] text-ink/50 dark:text-surface/50">
+              <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full inline-block" style="background:var(--c-primary)"></i>Ventas</span>
+              <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></i>Costes</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="blockEventos">
+          <!-- === Widget: Próximos eventos === -->
+          <div id="widgetEventos" class="mb-6">
+            <h3 class="font-bold text-sm text-ink/70 dark:text-surface/70 mb-2.5">Próximos eventos</h3>
+            <div id="proximosEventosList" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <div id="blockEnlaces">
+          <!-- === Widget: Documentos de interés === -->
+          <div id="widgetEnlaces" class="mb-6">
+            <div class="flex items-center justify-between mb-2.5">
+              <h3 class="font-bold text-sm text-ink/70 dark:text-surface/70">Documentos de interés</h3>
+              <button id="btnNuevoEnlace" class="rounded-lg text-white text-[11px] font-bold px-2.5 py-1.5 flex items-center gap-1" style="background:var(--c-primary)"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none"><use href="#ic-plus"/></svg>Añadir</button>
+            </div>
+            <div id="enlacesList" class="grid grid-cols-3 gap-2.5"></div>
+            <p id="enlacesEmpty" class="hidden text-xs text-ink/40 dark:text-surface/40 rounded-2xl bg-white dark:bg-carddark shadow-soft px-4 py-4 text-center">Aún no tienes accesos guardados</p>
+          </div>
+        </div>
+
+        <div id="blockFavoritos">
+          <div class="flex items-center justify-between mb-2.5">
+            <h3 class="font-bold text-sm text-ink/70 dark:text-surface/70">Favoritos</h3>
+            <span class="text-[11px] text-ink/40 dark:text-surface/40">Marca la ⭐ en cada sección para fijarla aquí</span>
+          </div>
+          <div id="favList" class="flex gap-3 overflow-x-auto no-scrollbar pb-2"></div>
+          <p id="favEmpty" class="hidden text-xs text-ink/40 dark:text-surface/40 py-4">Aún no tienes favoritos. Ve a cualquier sección y toca la estrella ⭐.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- TIENDA ---------- -->
+    <section data-view="tienda" class="section-fade">
+      <h2 class="font-extrabold text-xl mb-4">Tienda</h2>
+      <div class="flex gap-2 mb-5 overflow-x-auto no-scrollbar" id="tiendaSubTabs"></div>
+
+      <!-- === Productos === -->
+      <div data-subview="productos" class="active">
+        <div class="flex items-center justify-between mb-3">
+          <button class="star-toggle" data-fav-id="tienda-productos"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><use href="#ic-star"/></svg></button>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 mb-4">
+          <div class="relative flex-1">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" viewBox="0 0 24 24" fill="none"><use href="#ic-search"/></svg>
+            <input id="prodSearch" placeholder="Buscar por código o nombre..." class="w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-white dark:bg-carddark pl-9 pr-3 py-2.5 text-sm">
+          </div>
+          <div class="flex gap-2 no-print">
+            <button id="btnNuevoProducto" class="rounded-xl text-white text-xs font-bold px-3.5 flex items-center gap-1.5" style="background:var(--c-primary)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><use href="#ic-plus"/></svg>Nuevo</button>
+            <button id="btnEnviarProductos" class="rounded-xl border text-xs font-bold px-3 flex items-center gap-1.5" style="border-color:var(--c-primary); color:var(--c-primary-dark)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><use href="#ic-send"/></svg></button>
+            <button id="btnImprimirProductos" class="rounded-xl border text-xs font-bold px-3 flex items-center gap-1.5" style="border-color:var(--c-primary); color:var(--c-primary-dark)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><use href="#ic-print"/></svg></button>
+          </div>
+        </div>
+        <div id="printAreaProductos" class="printable rounded-2xl bg-white dark:bg-carddark shadow-soft overflow-x-auto">
+          <table class="grid-table w-full text-xs">
+            <thead><tr style="background:var(--c-primary-50); color:var(--c-primary-darker)" class="dark:!bg-[rgba(var(--c-primary-rgb),0.3)] dark:!text-surface" id="prodHeaderRow"></tr></thead>
+            <tbody id="prodBody"></tbody>
+          </table>
+          <p id="prodEmpty" class="text-xs text-ink/40 dark:text-surface/40 text-center py-8 hidden">Sin productos. Pulsa "Nuevo" para crear el primero.</p>
+        </div>
+      </div>
+
+      <!-- === Costes === -->
+      <div data-subview="costes">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <button class="star-toggle" data-fav-id="tienda-costes"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><use href="#ic-star"/></svg></button>
+            <p class="text-xs text-ink/50 dark:text-surface/50">Hoy: <span id="costesFechaLabel" class="font-bold"></span></p>
+          </div>
+          <button id="btnGuardarCostes" class="rounded-xl text-white text-xs font-bold px-4 py-2" style="background:var(--c-primary)">Guardar todo</button>
+        </div>
+        <div class="rounded-2xl bg-white dark:bg-carddark shadow-soft overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr style="background:var(--c-primary-50); color:var(--c-primary-darker)" class="dark:!bg-[rgba(var(--c-primary-rgb),0.3)] dark:!text-surface text-xs">
+              <th class="text-left px-4 py-3 font-bold">Tienda</th><th class="text-right px-3 py-3 font-bold">Pescado (€)</th><th class="text-right px-3 py-3 font-bold">Otros (€)</th><th class="px-3 py-3"></th>
+            </tr></thead>
+            <tbody id="costesBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- === Ventas === -->
+      <div data-subview="ventas">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <button class="star-toggle" data-fav-id="tienda-ventas"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><use href="#ic-star"/></svg></button>
+            <p class="text-xs text-ink/50 dark:text-surface/50">Hoy: <span id="ventasFechaLabel" class="font-bold"></span></p>
+          </div>
+          <button id="btnGuardarVentas" class="rounded-xl text-white text-xs font-bold px-4 py-2" style="background:var(--c-primary)">Guardar todo</button>
+        </div>
+        <div class="rounded-2xl bg-white dark:bg-carddark shadow-soft overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead><tr style="background:var(--c-primary-50); color:var(--c-primary-darker)" class="dark:!bg-[rgba(var(--c-primary-rgb),0.3)] dark:!text-surface text-xs">
+              <th class="text-left px-4 py-3 font-bold">Tienda</th><th class="text-right px-3 py-3 font-bold">Efectivo (€)</th><th class="text-right px-3 py-3 font-bold">Tarjeta (€)</th><th class="text-right px-3 py-3 font-bold">Bizum (€)</th><th class="px-3 py-3"></th>
+            </tr></thead>
+            <tbody id="ventasBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- === Calendario === -->
+      <div data-subview="calendario">
+        <div class="rounded-2xl bg-white dark:bg-carddark shadow-soft p-4">
+          <div class="flex items-center justify-between mb-4">
+            <button class="star-toggle" data-fav-id="tienda-calendario"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><use href="#ic-star"/></svg></button>
+            <div class="flex items-center gap-3">
+              <button id="calPrev" class="w-8 h-8 rounded-full hover:bg-[var(--c-primary-50)] dark:hover:bg-[rgba(var(--c-primary-rgb),0.2)] grid place-items-center"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-chevron-left"/></svg></button>
+              <p id="calMonthLabel" class="font-bold text-sm capitalize"></p>
+              <button id="calNext" class="w-8 h-8 rounded-full hover:bg-[var(--c-primary-50)] dark:hover:bg-[rgba(var(--c-primary-rgb),0.2)] grid place-items-center"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-chevron-right"/></svg></button>
+            </div>
+            <span class="w-5"></span>
+          </div>
+          <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-ink/40 dark:text-surface/40 mb-1.5">
+            <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+          </div>
+          <div id="calGrid" class="grid grid-cols-7 gap-1"></div>
+        </div>
+        <p class="text-[11px] text-ink/40 dark:text-surface/40 mt-3">Las alertas se muestran mientras la app esté abierta en el navegador.</p>
+      </div>
+    </section>
+
+    <!-- ---------- FICHAJE ---------- -->
+    <section data-view="fichaje" class="section-fade">
+      <div class="flex items-center justify-between mb-1">
+        <h2 class="font-extrabold text-xl">Fichaje</h2>
+        <button class="star-toggle" data-fav-id="fichaje"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><use href="#ic-star"/></svg></button>
+      </div>
+      <p class="text-sm text-ink/50 dark:text-surface/50 mb-6">Registra tu entrada y salida diaria</p>
+
+      <div class="rounded-3xl bg-white dark:bg-carddark shadow-soft p-6 mb-6 text-center">
+        <p id="fichajeStatus" class="text-sm font-semibold text-ink/60 dark:text-surface/60 mb-5">Aún no has fichado hoy</p>
+        <div class="flex items-center justify-center gap-6">
+          <button id="btnEntrada" class="pulse-beacon w-28 h-28 rounded-full text-white font-bold text-sm shadow-liftup active:scale-95 transition flex flex-col items-center justify-center gap-1" style="background:var(--c-primary)">
+            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none"><use href="#ic-check"/></svg> Entrada
+          </button>
+          <button id="btnSalida" disabled class="w-28 h-28 rounded-full bg-amber-600 text-white font-bold text-sm shadow-liftup active:scale-95 transition flex flex-col items-center justify-center gap-1 disabled:opacity-40 disabled:pointer-events-none">
+            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none"><use href="#ic-logout"/></svg> Salida
+          </button>
+        </div>
+        <p id="horasHoy" class="text-xs text-ink/40 dark:text-surface/40 mt-5"></p>
+      </div>
+
+      <h3 class="font-bold text-sm text-ink/70 dark:text-surface/70 mb-2.5">Historial de hoy</h3>
+      <div id="fichajeHistory" class="space-y-2"></div>
+    </section>
+
+    <!-- ---------- DOCUMENTOS ---------- -->
+    <section data-view="documentos" class="section-fade">
+      <h2 class="font-extrabold text-xl mb-4">Documentos</h2>
+      <div class="flex gap-2 mb-5 overflow-x-auto no-scrollbar" id="docSubTabs"></div>
+
+      <!-- === Balances === -->
+      <div data-docsubview="balances" class="active">
+        <div class="flex justify-end mb-2"><button class="star-toggle" data-fav-id="documentos-balances"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><use href="#ic-star"/></svg></button></div>
+        <div class="rounded-3xl bg-white dark:bg-carddark shadow-soft p-4 mb-5">
+          <div class="flex items-center gap-2 mb-3" style="color:var(--c-primary-dark)">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-filter"/></svg>
+            <span class="text-xs font-bold uppercase tracking-wide">Filtros</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5 mb-2.5">
+            <div><label class="text-[11px] font-semibold text-ink/50 dark:text-surface/50">Desde</label><input type="date" id="balDesde" class="mt-1 w-full rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-2.5 py-2 text-xs"></div>
+            <div><label class="text-[11px] font-semibold text-ink/50 dark:text-surface/50">Hasta</label><input type="date" id="balHasta" class="mt-1 w-full rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-2.5 py-2 text-xs"></div>
+          </div>
+          <select id="balTienda" class="w-full rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-2.5 py-2 text-xs font-medium mb-3">
+            <option value="todas">Todas las tiendas</option><option value="Valencia">Valencia</option><option value="Sedaví">Sedaví</option><option value="HORECA">HORECA</option>
+          </select>
+          <button id="btnConsultarBalance" class="w-full rounded-lg text-white text-xs font-bold py-2.5" style="background:var(--c-primary)">Consultar</button>
+        </div>
+
+        <div class="rounded-3xl bg-white dark:bg-carddark shadow-soft p-4 mb-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-sm text-ink/70 dark:text-surface/70">Ventas vs. costes por tienda</h3>
+            <button id="btnExportChart" class="no-print flex items-center gap-1.5 rounded-lg border text-[11px] font-bold px-2.5 py-1.5" style="border-color:var(--c-primary); color:var(--c-primary-dark)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><use href="#ic-download"/></svg>PNG</button>
+          </div>
+          <canvas id="balanceChart" width="600" height="240" class="w-full h-auto"></canvas>
+          <div class="flex items-center gap-4 mt-3 text-[11px] text-ink/50 dark:text-surface/50">
+            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full inline-block" style="background:var(--c-primary)"></i>Ventas</span>
+            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></i>Costes</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-2.5">
+          <h3 class="font-bold text-sm text-ink/70 dark:text-surface/70">Balance por tienda</h3>
+          <button id="btnExportExcel" class="no-print flex items-center gap-1.5 rounded-lg text-white text-[11px] font-bold px-3 py-1.5" style="background:var(--c-primary)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><use href="#ic-download"/></svg>Excel</button>
+        </div>
+        <div id="balanceTableWrap" class="rounded-2xl bg-white dark:bg-carddark shadow-soft overflow-x-auto mb-8"></div>
+      </div>
+
+      <!-- === Albaranes (Firebase Storage) === -->
+      <div data-docsubview="albaranes">
+        <div class="flex items-center justify-between mb-3">
+          <button class="star-toggle" data-fav-id="documentos-albaranes"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><use href="#ic-star"/></svg></button>
+          <div class="flex gap-2">
+            <button id="btnOrdenAlbaranes" class="text-xs font-bold px-3 py-2 rounded-lg border" style="border-color:var(--c-primary); color:var(--c-primary-dark)">Más recientes</button>
+            <label class="flex items-center gap-1.5 rounded-lg text-white text-xs font-bold px-3 py-2 cursor-pointer" style="background:var(--c-primary)">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><use href="#ic-camera"/></svg> Subir
+              <input type="file" id="albaranInput" accept="image/*,.pdf" capture="environment" class="hidden">
+            </label>
+          </div>
+        </div>
+        <p class="text-[11px] text-ink/40 dark:text-surface/40 mb-3">Se guardan en la nube (Firebase Storage), ordenados por fecha de subida.</p>
+        <div id="albaranesList" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+        <p id="albaranesEmpty" class="hidden text-xs text-ink/40 dark:text-surface/40 text-center py-8">Sin albaranes todavía</p>
+      </div>
+
+      <!-- === Etiquetas (Firebase Storage) === -->
+      <div data-docsubview="etiquetas">
+        <div class="flex items-center justify-between mb-3">
+          <button class="star-toggle" data-fav-id="documentos-etiquetas"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><use href="#ic-star"/></svg></button>
+          <div class="flex gap-2">
+            <button id="btnOrdenEtiquetas" class="text-xs font-bold px-3 py-2 rounded-lg border" style="border-color:var(--c-primary); color:var(--c-primary-dark)">Más recientes</button>
+            <label class="flex items-center gap-1.5 rounded-lg text-white text-xs font-bold px-3 py-2 cursor-pointer" style="background:var(--c-primary)">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><use href="#ic-camera"/></svg> Subir
+              <input type="file" id="etiquetaInput" accept="image/*,.pdf" capture="environment" class="hidden">
+            </label>
+          </div>
+        </div>
+        <p class="text-[11px] text-ink/40 dark:text-surface/40 mb-3">Se guardan en la nube (Firebase Storage), ordenados por fecha de subida.</p>
+        <div id="etiquetasList" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+        <p id="etiquetasEmpty" class="hidden text-xs text-ink/40 dark:text-surface/40 text-center py-8">Sin etiquetas todavía</p>
+      </div>
+    </section>
+
+    <!-- ---------- CREAR ALBARÁN (solo master) ---------- -->
+    <section data-view="albaranMaster" class="section-fade">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-extrabold text-xl">Crear Albarán</h2>
+        <button id="btnDatosEmpresa" class="text-[11px] font-bold underline" style="color:var(--c-primary-dark)">Datos de empresa</button>
+      </div>
+      <div class="flex gap-2 mb-5 overflow-x-auto no-scrollbar" id="albaranSubTabs"></div>
+
+      <!-- === Nuevo albarán === -->
+      <div data-albsubview="nuevo" class="active">
+        <div class="rounded-3xl bg-white dark:bg-carddark shadow-soft p-4 mb-5">
+          <h3 class="text-xs font-bold uppercase tracking-wide mb-3" style="color:var(--c-primary-dark)">Cliente (comprador)</h3>
+          <div class="grid grid-cols-2 gap-2.5 mb-2.5">
+            <input id="albCliNombre" placeholder="Nombre / Razón social *" class="col-span-2 rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3 py-2.5 text-sm">
+            <input id="albCliNif" placeholder="NIF / CIF" class="rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3 py-2.5 text-sm">
+            <input id="albCliTelefono" placeholder="Teléfono" class="rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3 py-2.5 text-sm">
+            <input id="albCliDireccion" placeholder="Dirección" class="col-span-2 rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3 py-2.5 text-sm">
+          </div>
+        </div>
+
+        <div class="rounded-3xl bg-white dark:bg-carddark shadow-soft p-4 mb-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-bold uppercase tracking-wide" style="color:var(--c-primary-dark)">Productos</h3>
+            <button id="btnAddLineaAlbaran" class="rounded-lg text-white text-[11px] font-bold px-2.5 py-1.5 flex items-center gap-1" style="background:var(--c-primary)"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none"><use href="#ic-plus"/></svg>Línea</button>
+          </div>
+          <datalist id="productosDatalist"></datalist>
+          <div id="lineasAlbaranWrap" class="space-y-2"></div>
+        </div>
+
+        <div class="rounded-3xl bg-white dark:bg-carddark shadow-soft p-4 mb-5">
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-sm text-ink/60 dark:text-surface/60">Subtotal</span>
+            <span id="albSubtotal" class="text-sm font-semibold">0,00 €</span>
+          </div>
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-sm text-ink/60 dark:text-surface/60">IVA (%)</span>
+            <input id="albIva" type="number" step="0.01" min="0" value="21" class="w-20 text-right rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-2 py-1 text-sm">
+          </div>
+          <div class="flex items-center justify-between pt-2.5 border-t border-[var(--c-primary-50)] dark:border-[rgba(var(--c-primary-rgb),0.2)]">
+            <span class="text-base font-bold">TOTAL</span>
+            <span id="albTotal" class="text-lg font-extrabold" style="color:var(--c-primary-dark)">0,00 €</span>
+          </div>
+        </div>
+
+        <div class="flex gap-2 mb-8">
+          <button id="btnNuevoAlbaranReset" class="rounded-xl border text-xs font-bold px-4 py-3" style="border-color:var(--c-primary); color:var(--c-primary-dark)">Nuevo</button>
+          <button id="btnGuardarAlbaran" class="flex-1 rounded-xl text-white text-sm font-bold py-3" style="background:var(--c-primary)">Guardar albarán</button>
+          <button id="btnImprimirAlbaranActual" class="rounded-xl border text-xs font-bold px-4 py-3 flex items-center gap-1.5" style="border-color:var(--c-primary); color:var(--c-primary-dark)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><use href="#ic-print"/></svg>Imprimir</button>
+        </div>
+      </div>
+
+      <!-- === Historial === -->
+      <div data-albsubview="historial">
+        <div id="historialAlbaranesList" class="space-y-2 mb-8"></div>
+        <p id="historialAlbaranesEmpty" class="hidden text-xs text-ink/40 dark:text-surface/40 text-center py-8">Todavía no has creado ningún albarán</p>
+      </div>
+    </section>
+
+  </main>
+
+  <nav id="bottomNav" class="fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-carddark/95 backdrop-blur border-t border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.3)] pb-[env(safe-area-inset-bottom)]">
+    <div class="max-w-3xl mx-auto flex justify-around items-center px-1 py-1.5" id="bottomNavInner"></div>
+  </nav>
+</div>
+
+<!-- ============ MODAL genérico (evento de calendario / cuenta y ajustes) ============ -->
+<div id="modalOverlay" class="hidden fixed inset-0 z-40 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div id="modalPanel" class="w-full sm:max-w-md bg-white dark:bg-carddark rounded-t-3xl sm:rounded-3xl p-5 max-h-[85vh] overflow-y-auto"></div>
+</div>
+
+<div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 hidden px-4 py-2.5 rounded-xl bg-ink text-white text-xs font-semibold shadow-liftup"></div>
+
+<!-- ============ ÁREA DE IMPRESIÓN DEL ALBARÁN (fuera de pantalla, visible solo al imprimir) ============ -->
+<div id="albaranPrintArea" class="printable"></div>
+
+<!-- =========================================================================================
+     SEGURIDAD — Reglas recomendadas (aplicar en Firebase Console):
+
+     // Firestore
+     rules_version = '2';
+     service cloud.firestore {
+       match /databases/{database}/documents {
+         match /users/{userId}/{document=**} {
+           allow read, write: if request.auth != null && request.auth.uid == userId;
+         }
+         // Rol de cada usuario (solo lectura desde la app). El campo "rol" ("master" o
+         // cualquier otro valor/ausente = usuario normal) se crea y edita a mano desde
+         // Firebase Console → Firestore → colección "roles" → documento con ID = UID del usuario.
+         // Ejemplo de documento: { rol: "master" }
+         match /roles/{userId} {
+           allow read: if request.auth != null && request.auth.uid == userId;
+           allow write: if false;
+         }
+       }
+     }
+
+     // Storage (albaranes, etiquetas, foto de perfil, logo de empresa)
+     rules_version = '2';
+     service firebase.storage {
+       match /b/{bucket}/o {
+         match /{coleccion}/{userId}/{allPaths=**} {
+           allow read, write: if request.auth != null && request.auth.uid == userId;
+         }
+       }
+     }
+
+     El acceso a la app requiere Firebase Authentication (correo/contraseña).
+     Crea los usuarios autorizados desde Firebase Console → Authentication → Users.
+
+     La sección "Crear Albarán" solo la ve quien tenga rol "master" (ver arriba).
+     Para convertir a un usuario en master: Firestore → colección "roles" → documento
+     con ID = su UID (lo ves en Authentication → Users) → campo rol = "master".
+     ========================================================================================= -->
+
+<script type="module">
+  // ==================== FIREBASE (SDK modular v12) ====================
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, query, where,
+    doc, setDoc, getDoc, deleteDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+  import {
+    getStorage, ref as sref, uploadBytes, getDownloadURL, deleteObject
+  } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAzS9NKQKAu961xYTFu9lObuF-tdyP9ozc",
+    authDomain: "abysssafe.firebaseapp.com",
+    projectId: "abysssafe",
+    storageBucket: "abysssafe.firebasestorage.app",
+    messagingSenderId: "1074349824437",
+    appId: "1:1074349824437:web:df97c88730098a6bace1fc",
+    measurementId: "G-FDD920477L"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  if ('serviceWorker' in navigator) {
+    const swSource = "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>{});";
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([swSource], { type: 'application/javascript' }))).catch(() => {});
+  }
+
+  // ==================== STATE ====================
+  const STORES = ['Valencia', 'Sedaví', 'HORECA'];
+  const THEMES = [
+    { id: 'totem',   nombre: 'Tótem Verde', primary: '#0F6B5C', dark: '#0B4F44', darker: '#083A32', c50: '#E7F3F0', c100: '#CFE7E1', contrast: '#7fd8c5' },
+    { id: 'oceano',  nombre: 'Océano Azul', primary: '#0E63B0', dark: '#0A4A82', darker: '#073357', c50: '#E6F1FA', c100: '#C7E1F5', contrast: '#8ec9f2' },
+    { id: 'berenjena', nombre: 'Berenjena', primary: '#6D28D9', dark: '#4C1D95', darker: '#37146D', c50: '#F1EAFB', c100: '#E0D2F7', contrast: '#c9aef5' },
+    { id: 'granate', nombre: 'Granate', primary: '#9F1D3A', dark: '#74142B', darker: '#520E1F', c50: '#FBE9ED', c100: '#F3C7D0', contrast: '#f0a7b6' },
+    { id: 'antracita', nombre: 'Antracita', primary: '#374151', dark: '#1F2937', darker: '#111827', c50: '#F1F2F4', c100: '#DDE1E6', contrast: '#b6bdc7' },
+    { id: 'turquesa', nombre: 'Turquesa', primary: '#0891B2', dark: '#155E75', darker: '#0E4453', c50: '#E3F6FA', c100: '#BEEBF3', contrast: '#7fd4e6' },
+  ];
+  const FAV_CATALOG = [
+    { id: 'tienda-productos', nombre: 'Productos',        ruta: 'tienda', sub: 'productos', icono: '🏷️' },
+    { id: 'tienda-costes',    nombre: 'Costes del día',   ruta: 'tienda', sub: 'costes', icono: '🧾' },
+    { id: 'tienda-ventas',    nombre: 'Ventas del día',   ruta: 'tienda', sub: 'ventas', icono: '💶' },
+    { id: 'tienda-calendario', nombre: 'Calendario',      ruta: 'tienda', sub: 'calendario', icono: '📅' },
+    { id: 'fichaje',          nombre: 'Fichaje',          ruta: 'fichaje', icono: '🕒' },
+    { id: 'documentos-balances', nombre: 'Balances',       ruta: 'documentos', docsub: 'balances', icono: '📊' },
+    { id: 'documentos-albaranes', nombre: 'Albaranes',    ruta: 'documentos', docsub: 'albaranes', icono: '📦' },
+    { id: 'documentos-etiquetas', nombre: 'Etiquetas',    ruta: 'documentos', docsub: 'etiquetas', icono: '🏷️' },
+  ];
+  const ORDENABLE_BLOCKS = [
+    { id: 'resumen', nombre: 'Resumen de hoy', icono: '📊' },
+    { id: 'fichaje', nombre: 'Estado del fichaje', icono: '🕒' },
+    { id: 'accesos', nombre: 'Accesos rápidos', icono: '⚡' },
+    { id: 'grafico', nombre: 'Últimos 7 días', icono: '📈' },
+    { id: 'eventos', nombre: 'Próximos eventos', icono: '📅' },
+    { id: 'enlaces', nombre: 'Documentos de interés', icono: '🔗' },
+    { id: 'favoritos', nombre: 'Favoritos', icono: '⭐' },
+  ];
+  const PRODUCT_COLS = [
+    { key: 'codigo', label: 'Código', type: 'text' }, { key: 'nombre', label: 'Nombre', type: 'text' },
+    { key: 'coste', label: 'Coste', type: 'number' }, { key: 'ivaRecargo', label: 'IVA+Rec.', type: 'number' },
+    { key: 'rendimiento', label: 'Rendim.', type: 'number' }, { key: 'margen', label: 'Margen', type: 'number' },
+    { key: 'venta', label: 'Venta', type: 'number' }, { key: 'ventaReducida', label: 'Venta Red.', type: 'number' },
+  ];
+  const EVENT_COLORS = ['#0F6B5C', '#E8A33D', '#C0392B', '#2563EB', '#7C3AED', '#DB2777'];
+  const QUOTES = [
+    'Cada pequeño paso suma al gran resultado.', 'La constancia vence lo que la suerte no alcanza.',
+    'Hoy es una buena oportunidad para hacerlo un poco mejor que ayer.', 'Un buen equipo hace fácil lo difícil.',
+    'La calidad se nota en los detalles del día a día.', 'El orden de hoy es el tiempo ganado de mañana.',
+    'Cuidar cada venta es cuidar el negocio entero.', 'Las grandes tiendas se construyen con buenos hábitos diarios.',
+  ];
+
+  let uid = null;
+  let currentView = 'inicio';
+  let currentSub = 'productos';
+  let currentDocSub = 'balances';
+  let allMovimientos = [], filteredMovimientos = [];
+  let favoritosSet = new Set();
+  let ultimoFichajeTipo = null;
+  let fichajesAll = [];
+  let profileConfig = { modoOscuro: false, biometria: false, nombre: '', tienda: 'Valencia', tema: 'totem', widgetsInicio: { fichaje: true, accesos: true, grafico: true, eventos: true, enlaces: true }, ordenInicio: ['resumen', 'fichaje', 'accesos', 'grafico', 'eventos', 'enlaces', 'favoritos'] };
+  let productos = [];
+  let sortField = 'codigo', sortAsc = true;
+  let costesHoy = {}, ventasHoy = {};
+  let calendarDate = new Date();
+  let eventos = [];
+  let albaranes = [], etiquetas = [];
+  let enlaces = [];
+  let esMaster = false;
+  let empresaConfig = { nombre: '', nif: '', direccion: '', telefono: '', email: '', logo: '', ivaDefault: 21, ultimoNumero: 0 };
+  let albaranesCreados = [];
+  let lineasAlbaran = [];
+  let albaranEditandoId = null;
+  let currentAlbSub = 'nuevo';
+  let ordenArchivosDesc = { albaranes: true, etiquetas: true };
+  let lastBalance = null;
+
+  const $ = (id) => document.getElementById(id);
+  const eur = (n) => (Number(n) || 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+  const todayISO = () => new Date().toISOString().slice(0, 10);
+  const hexToRgb = (hex) => { const v = hex.replace('#', ''); return [0, 2, 4].map(i => parseInt(v.substr(i, 2), 16)).join(','); };
+
+  function showToast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.remove('hidden');
+    clearTimeout(showToast._tm);
+    showToast._tm = setTimeout(() => t.classList.add('hidden'), 2200);
+  }
+
+  // ==================== TEMA (colores) ====================
+  function applyTheme(themeId, persist = true) {
+    const t = THEMES.find(x => x.id === themeId) || THEMES[0];
+    const r = document.documentElement.style;
+    r.setProperty('--c-primary', t.primary);
+    r.setProperty('--c-primary-dark', t.dark);
+    r.setProperty('--c-primary-darker', t.darker);
+    r.setProperty('--c-primary-50', t.c50);
+    r.setProperty('--c-primary-100', t.c100);
+    r.setProperty('--c-primary-rgb', hexToRgb(t.primary));
+    r.setProperty('--c-contrast', t.contrast);
+    document.querySelector('meta[name=theme-color]').setAttribute('content', t.primary);
+    if (persist) { profileConfig.tema = themeId; saveProfile(); }
+  }
+
+  // ==================== NAVEGACIÓN PRINCIPAL (4 secciones + cuenta arriba) ====================
+  const NAV_ITEMS = [
+    { id: 'inicio', label: 'Inicio', icon: 'ic-home' },
+    { id: 'tienda', label: 'Tienda', icon: 'ic-store' },
+    { id: 'fichaje', label: 'Fichaje', icon: 'ic-clock' },
+    { id: 'documentos', label: 'Documentos', icon: 'ic-doc' },
+  ];
+  function buildNav() {
+    const items = esMaster ? [...NAV_ITEMS, { id: 'albaranMaster', label: 'Albarán', icon: 'ic-receipt' }] : NAV_ITEMS;
+    const bottom = $('bottomNavInner'); bottom.innerHTML = '';
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'nav-item flex flex-col items-center gap-1 px-3 py-1.5 flex-1';
+      btn.dataset.view = item.id;
+      btn.innerHTML = `<div class="nav-pill rounded-full px-4 py-1.5"><svg class="w-5 h-5 nav-icon text-ink/40 dark:text-surface/40" viewBox="0 0 24 24" fill="none"><use href="#${item.icon}"/></svg></div><span class="nav-label text-[10px] font-medium">${item.label}</span>`;
+      btn.addEventListener('click', () => setView(item.id));
+      bottom.appendChild(btn);
+    });
+  }
+  function setView(view) {
+    currentView = view;
+    document.querySelectorAll('[data-view]').forEach(el => el.classList.toggle('active', el.dataset.view === view));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === view));
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (view === 'documentos' && currentDocSub === 'balances') calcularBalance();
+    if (view === 'inicio') { renderDashboard(); renderInicioWidgets(); }
+    if (view === 'albaranMaster' && currentAlbSub === 'historial') renderHistorialAlbaranes();
+  }
+
+  const TIENDA_SUBS = [{ id: 'productos', label: 'Productos' }, { id: 'costes', label: 'Costes' }, { id: 'ventas', label: 'Ventas' }, { id: 'calendario', label: 'Calendario' }];
+  function buildTiendaSubTabs() {
+    const wrap = $('tiendaSubTabs'); wrap.innerHTML = '';
+    TIENDA_SUBS.forEach(t => {
+      const b = document.createElement('button');
+      b.dataset.sub = t.id; b.className = 'sub-tab shrink-0 rounded-full px-4 py-2 text-xs font-bold border-2 transition';
+      b.textContent = t.label; b.addEventListener('click', () => setSub(t.id));
+      wrap.appendChild(b);
+    });
+    paintSubTabs();
+  }
+  function paintSubTabs() {
+    document.querySelectorAll('.sub-tab').forEach(b => {
+      const active = b.dataset.sub === currentSub;
+      b.style.background = active ? 'var(--c-primary)' : 'transparent';
+      b.style.borderColor = active ? 'var(--c-primary)' : 'var(--c-primary-100)';
+      b.style.color = active ? '#fff' : '';
+      b.className = 'sub-tab shrink-0 rounded-full px-4 py-2 text-xs font-bold border-2 transition ' + (active ? 'text-white' : 'text-ink/60 dark:text-surface/60');
+    });
+  }
+  function setSub(sub) {
+    currentSub = sub; paintSubTabs();
+    document.querySelectorAll('[data-subview]').forEach(el => el.classList.toggle('active', el.dataset.subview === sub));
+    if (sub === 'calendario') renderCalendar();
+  }
+
+  const DOC_SUBS = [{ id: 'balances', label: 'Balances' }, { id: 'albaranes', label: 'Albaranes' }, { id: 'etiquetas', label: 'Etiquetas' }];
+  function buildDocSubTabs() {
+    const wrap = $('docSubTabs'); wrap.innerHTML = '';
+    DOC_SUBS.forEach(t => {
+      const b = document.createElement('button');
+      b.dataset.docsub = t.id; b.className = 'doc-sub-tab shrink-0 rounded-full px-4 py-2 text-xs font-bold border-2 transition';
+      b.textContent = t.label; b.addEventListener('click', () => setDocSub(t.id));
+      wrap.appendChild(b);
+    });
+    paintDocSubTabs();
+  }
+  function paintDocSubTabs() {
+    document.querySelectorAll('.doc-sub-tab').forEach(b => {
+      const active = b.dataset.docsub === currentDocSub;
+      b.className = 'doc-sub-tab shrink-0 rounded-full px-4 py-2 text-xs font-bold border-2 transition ' + (active ? 'text-white' : 'text-ink/60 dark:text-surface/60');
+      b.style.background = active ? 'var(--c-primary)' : 'transparent';
+      b.style.borderColor = active ? 'var(--c-primary)' : 'var(--c-primary-100)';
+    });
+  }
+  function setDocSub(sub) {
+    currentDocSub = sub; paintDocSubTabs();
+    document.querySelectorAll('[data-docsubview]').forEach(el => el.classList.toggle('active', el.dataset.docsubview === sub));
+    if (sub === 'balances') calcularBalance();
+    if (sub === 'albaranes') renderArchivos('albaranes');
+    if (sub === 'etiquetas') renderArchivos('etiquetas');
+  }
+
+  // ==================== AUTH ====================
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      uid = user.uid;
+      $('loginScreen').classList.add('hidden');
+      await ensureProfile(user);
+      applyTheme(profileConfig.tema || 'totem', false);
+      await loadRol();
+      await Promise.all([loadFavoritos(), loadProductos(), loadCostesVentasHoy(), loadEventos(), loadFichajeHoy(), loadFichajesAll(), loadArchivos('albaranes'), loadArchivos('etiquetas'), loadEnlaces()]);
+      if (esMaster) await Promise.all([loadEmpresaConfig(), loadAlbaranesCreados()]);
+      await loadCostesVentasHistorial();
+      initUI();
+      $('splash').classList.add('hidden');
+      $('app').classList.remove('hidden');
+    } else {
+      $('splash').classList.add('hidden');
+      $('app').classList.add('hidden');
+      $('loginScreen').classList.remove('hidden');
+    }
+  });
+
+  $('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = $('loginEmail').value.trim(), pass = $('loginPass').value;
+    const btn = $('loginBtn'), err = $('loginError');
+    err.textContent = ''; btn.disabled = true; btn.textContent = 'Entrando...';
+    try { await signInWithEmailAndPassword(auth, email, pass); }
+    catch (ex) {
+      const map = { 'auth/invalid-credential': 'Correo o contraseña incorrectos.', 'auth/invalid-email': 'El correo no es válido.', 'auth/user-not-found': 'Este usuario no está autorizado.', 'auth/wrong-password': 'Contraseña incorrecta.', 'auth/too-many-requests': 'Demasiados intentos. Prueba más tarde.' };
+      err.textContent = map[ex.code] || 'No se pudo iniciar sesión.';
+    } finally { btn.disabled = false; btn.textContent = 'Iniciar sesión'; }
+  });
+
+  // ==================== PROFILE ====================
+  async function ensureProfile(user) {
+    const ref = doc(db, 'users', uid, 'perfil', 'config');
+    const snap = await getDoc(ref);
+    if (snap.exists()) { profileConfig = { ...profileConfig, ...snap.data() }; }
+    else { profileConfig.nombre = user.email ? user.email.split('@')[0] : 'Usuario Tótem'; await setDoc(ref, profileConfig); }
+    profileConfig.widgetsInicio = { fichaje: true, accesos: true, grafico: true, eventos: true, enlaces: true, ...profileConfig.widgetsInicio };
+    const idsValidos = ORDENABLE_BLOCKS.map(b => b.id);
+    if (!Array.isArray(profileConfig.ordenInicio) || profileConfig.ordenInicio.length !== idsValidos.length || !idsValidos.every(id => profileConfig.ordenInicio.includes(id))) {
+      profileConfig.ordenInicio = idsValidos;
+    }
+    profileConfig.email = user.email || '';
+  }
+  async function saveProfile() { await setDoc(doc(db, 'users', uid, 'perfil', 'config'), profileConfig, { merge: true }); }
+
+  // ==================== ROL (solo lectura, se asigna manualmente desde Firebase Console) ====================
+  async function loadRol() {
+    try {
+      const snap = await getDoc(doc(db, 'roles', uid));
+      esMaster = snap.exists() && snap.data().rol === 'master';
+    } catch (e) { esMaster = false; }
+  }
+
+  // ==================== DATOS DE EMPRESA (vendedor, para el PDF de albaranes) ====================
+  async function loadEmpresaConfig() {
+    const snap = await getDoc(doc(db, 'users', uid, 'config', 'empresa'));
+    if (snap.exists()) empresaConfig = { ...empresaConfig, ...snap.data() };
+  }
+  async function saveEmpresaConfig() { await setDoc(doc(db, 'users', uid, 'config', 'empresa'), empresaConfig, { merge: true }); }
+  async function loadAlbaranesCreados() {
+    const snap = await getDocs(collection(db, 'users', uid, 'albaranesCreados'));
+    albaranesCreados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  function refreshAvatarChip() {
+    const chip = $('avatarChip');
+    if (profileConfig.foto) chip.innerHTML = `<img src="${profileConfig.foto}" class="w-full h-full object-cover">`;
+    else chip.textContent = (profileConfig.nombre || 'U').trim()[0]?.toUpperCase() || 'U';
+  }
+
+  // ==================== PANEL DE CUENTA / AJUSTES (arriba a la derecha) ====================
+  function openAccountPanel() {
+    const swatches = THEMES.map(t => `<button type="button" class="theme-swatch ${profileConfig.tema === t.id ? 'active' : ''}" data-theme="${t.id}" style="background:${t.primary}" title="${t.nombre}"></button>`).join('');
+    $('modalPanel').innerHTML = `
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-extrabold text-base">Mi cuenta</h3>
+        <button id="closeAccountModal" class="text-ink/40 dark:text-surface/40 text-xl leading-none">&times;</button>
+      </div>
+      <div class="flex items-center gap-4 mb-5">
+        <label class="relative cursor-pointer shrink-0">
+          <div id="accPhotoWrap" class="w-16 h-16 rounded-full text-white grid place-items-center text-xl font-extrabold shadow-soft overflow-hidden" style="background:var(--c-primary)">${profileConfig.foto ? `<img src="${profileConfig.foto}" class="w-full h-full object-cover">` : (profileConfig.nombre || 'U').trim()[0]?.toUpperCase()}</div>
+          <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-600 grid place-items-center border-2 border-white dark:border-carddark"><svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none"><use href="#ic-camera"/></svg></div>
+          <input type="file" id="accPhotoInput" accept="image/*" capture="user" class="hidden">
+        </label>
+        <div class="flex-1 min-w-0">
+          <input id="accNombre" value="${profileConfig.nombre || ''}" placeholder="Tu nombre" class="w-full bg-transparent font-bold text-base focus:outline-none border-b border-transparent pb-0.5" style="border-color:var(--c-primary)">
+          <p class="text-[11px] text-ink/40 dark:text-surface/40 mt-1 truncate">${profileConfig.email || ''}</p>
+        </div>
+      </div>
+      <div class="mb-5">
+        <label class="text-[11px] font-semibold text-ink/50 dark:text-surface/50">Tienda en la que trabajas</label>
+        <select id="accTienda" class="mt-1 w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3 py-2.5 text-sm">
+          ${STORES.map(s => `<option value="${s}" ${profileConfig.tienda === s ? 'selected' : ''}>${s}</option>`).join('')}
+          <option value="Todas" ${profileConfig.tienda === 'Todas' ? 'selected' : ''}>Todas / Central</option>
+        </select>
+      </div>
+      <div class="rounded-2xl bg-surface dark:bg-surfacedark p-4 mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" style="color:var(--c-primary-dark)"><use href="#ic-moon"/></svg><p class="text-sm font-semibold">Modo oscuro</p></div>
+          <div id="toggleDark" class="switch off"><div class="switch-dot"></div></div>
+        </div>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" style="color:var(--c-primary-dark)"><use href="#ic-fingerprint"/></svg><p class="text-sm font-semibold">Login biométrico</p></div>
+          <div id="toggleBio" class="switch off"><div class="switch-dot"></div></div>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" style="color:var(--c-primary-dark)"><use href="#ic-bell"/></svg><p class="text-sm font-semibold">Alertas del calendario</p></div>
+          <button id="btnPedirNotif" class="text-xs font-bold underline" style="color:var(--c-primary-dark)">Activar</button>
+        </div>
+      </div>
+      <div class="mb-5">
+        <p class="text-[11px] font-semibold text-ink/50 dark:text-surface/50 mb-2">Tema de color</p>
+        <div class="flex items-center gap-2.5 flex-wrap">${swatches}</div>
+      </div>
+      <div class="rounded-2xl bg-surface dark:bg-surfacedark p-4 mb-5">
+        <p class="text-[11px] font-semibold text-ink/50 dark:text-surface/50 mb-3">Personalizar Inicio</p>
+        <div class="flex items-center justify-between mb-3"><p class="text-sm font-semibold">Estado del fichaje</p><div id="toggleWFichaje" class="switch off"><div class="switch-dot"></div></div></div>
+        <div class="flex items-center justify-between mb-3"><p class="text-sm font-semibold">Accesos rápidos</p><div id="toggleWAccesos" class="switch off"><div class="switch-dot"></div></div></div>
+        <div class="flex items-center justify-between mb-3"><p class="text-sm font-semibold">Gráfico últimos 7 días</p><div id="toggleWGrafico" class="switch off"><div class="switch-dot"></div></div></div>
+        <div class="flex items-center justify-between mb-3"><p class="text-sm font-semibold">Próximos eventos</p><div id="toggleWEventos" class="switch off"><div class="switch-dot"></div></div></div>
+        <div class="flex items-center justify-between"><p class="text-sm font-semibold">Documentos de interés</p><div id="toggleWEnlaces" class="switch off"><div class="switch-dot"></div></div></div>
+      </div>
+      <button id="btnLogout" class="w-full rounded-2xl border border-red-200 text-red-600 font-bold text-sm py-3 flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-logout"/></svg> Cerrar sesión
+      </button>`;
+
+    setSwitch('toggleDark', profileConfig.modoOscuro);
+    setSwitch('toggleBio', profileConfig.biometria);
+    setSwitch('toggleWFichaje', profileConfig.widgetsInicio.fichaje);
+    setSwitch('toggleWAccesos', profileConfig.widgetsInicio.accesos);
+    setSwitch('toggleWGrafico', profileConfig.widgetsInicio.grafico);
+    setSwitch('toggleWEventos', profileConfig.widgetsInicio.eventos);
+    setSwitch('toggleWEnlaces', profileConfig.widgetsInicio.enlaces);
+    [['toggleWFichaje', 'fichaje'], ['toggleWAccesos', 'accesos'], ['toggleWGrafico', 'grafico'], ['toggleWEventos', 'eventos'], ['toggleWEnlaces', 'enlaces']].forEach(([elId, key]) => {
+      $(elId).addEventListener('click', async () => {
+        profileConfig.widgetsInicio[key] = !profileConfig.widgetsInicio[key];
+        setSwitch(elId, profileConfig.widgetsInicio[key]);
+        await saveProfile();
+        applyWidgetVisibility();
+      });
+    });
+
+    $('closeAccountModal').addEventListener('click', closeModal);
+    $('accNombre').addEventListener('change', async () => { profileConfig.nombre = $('accNombre').value.trim(); await saveProfile(); refreshAvatarChip(); renderInicioHeader(); });
+    $('accTienda').addEventListener('change', async () => { profileConfig.tienda = $('accTienda').value; await saveProfile(); });
+    $('accPhotoInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      showToast('Subiendo foto...');
+      const path = `perfiles/${uid}/foto_${Date.now()}_${file.name}`;
+      const r = sref(storage, path);
+      await uploadBytes(r, file);
+      profileConfig.foto = await getDownloadURL(r);
+      await saveProfile();
+      refreshAvatarChip();
+      $('accPhotoWrap').innerHTML = `<img src="${profileConfig.foto}" class="w-full h-full object-cover">`;
+      showToast('Foto actualizada ✅');
+    });
+    $('toggleDark').addEventListener('click', async () => {
+      profileConfig.modoOscuro = !profileConfig.modoOscuro;
+      setSwitch('toggleDark', profileConfig.modoOscuro);
+      document.documentElement.classList.toggle('dark', profileConfig.modoOscuro);
+      await saveProfile();
+    });
+    $('toggleBio').addEventListener('click', async () => {
+      profileConfig.biometria = !profileConfig.biometria;
+      setSwitch('toggleBio', profileConfig.biometria);
+      await saveProfile();
+      showToast(profileConfig.biometria ? 'Biometría activada (simulada)' : 'Biometría desactivada');
+    });
+    $('btnPedirNotif').addEventListener('click', async () => {
+      if (!('Notification' in window)) { showToast('Tu navegador no soporta notificaciones'); return; }
+      await Notification.requestPermission();
+      showToast(Notification.permission === 'granted' ? 'Alertas activadas' : 'Permiso no concedido');
+    });
+    document.querySelectorAll('.theme-swatch').forEach(b => b.addEventListener('click', () => {
+      applyTheme(b.dataset.theme);
+      document.querySelectorAll('.theme-swatch').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    }));
+    $('btnLogout').addEventListener('click', async () => { await signOut(auth); closeModal(); showToast('Sesión cerrada'); });
+
+    $('modalOverlay').classList.remove('hidden');
+  }
+  function closeModal() { $('modalOverlay').classList.add('hidden'); $('modalPanel').innerHTML = ''; }
+  $('modalOverlay').addEventListener('click', (e) => { if (e.target === $('modalOverlay')) closeModal(); });
+  $('avatarChipBtn').addEventListener('click', openAccountPanel);
+
+  function setSwitch(id, on) { const el = $(id); el.classList.toggle('on', !!on); el.classList.toggle('off', !on); }
+
+  // ==================== FAVORITOS ====================
+  async function loadFavoritos() {
+    const snap = await getDocs(collection(db, 'users', uid, 'favoritos'));
+    favoritosSet = new Set(snap.docs.filter(d => d.data().activo !== false).map(d => d.id));
+  }
+  async function toggleFavorito(item) {
+    const ref = doc(db, 'users', uid, 'favoritos', item.id);
+    if (favoritosSet.has(item.id)) { await setDoc(ref, { activo: false, nombre: item.nombre, ruta: item.ruta, updatedAt: serverTimestamp() }); favoritosSet.delete(item.id); }
+    else { await setDoc(ref, { activo: true, nombre: item.nombre, ruta: item.ruta, createdAt: serverTimestamp() }); favoritosSet.add(item.id); }
+    renderFavoritos(); paintStarButtons();
+  }
+  function paintStarButtons() {
+    document.querySelectorAll('.star-toggle').forEach(b => b.classList.toggle('fav', favoritosSet.has(b.dataset.favId)));
+  }
+  function renderFavoritos() {
+    const wrap = $('favList'); wrap.innerHTML = '';
+    const activos = FAV_CATALOG.filter(f => favoritosSet.has(f.id));
+    $('favEmpty').classList.toggle('hidden', activos.length > 0);
+    activos.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'min-w-[128px] rounded-2xl bg-white dark:bg-carddark shadow-soft p-3.5 relative shrink-0 cursor-pointer active:scale-95 transition';
+      card.innerHTML = `<button class="fav-star absolute top-2 right-2" data-id="${item.id}"><svg class="w-4 h-4" style="color:#E8A33D" viewBox="0 0 24 24" fill="currentColor"><use href="#ic-star"/></svg></button><span class="text-2xl">${item.icono}</span><p class="text-xs font-bold mt-2 leading-tight pr-3">${item.nombre}</p>`;
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.fav-star')) { toggleFavorito(item); return; }
+        setView(item.ruta);
+        if (item.sub) setSub(item.sub);
+        if (item.docsub) setDocSub(item.docsub);
+      });
+      wrap.appendChild(card);
+    });
+  }
+  function wireStarButtons() {
+    document.querySelectorAll('.star-toggle').forEach(b => {
+      b.addEventListener('click', () => {
+        const item = FAV_CATALOG.find(f => f.id === b.dataset.favId);
+        if (item) toggleFavorito(item);
+      });
+    });
+    paintStarButtons();
+  }
+
+  // ==================== PRODUCTOS ====================
+  async function loadProductos() { const snap = await getDocs(collection(db, 'users', uid, 'productos')); productos = snap.docs.map(d => ({ id: d.id, ...d.data() })); }
+  function buildProductHeader() {
+    const row = $('prodHeaderRow'); row.innerHTML = '';
+    PRODUCT_COLS.forEach(c => {
+      const th = document.createElement('th');
+      th.className = 'text-left px-3 py-2.5 font-bold cursor-pointer select-none whitespace-nowrap';
+      th.innerHTML = `${c.label} <span class="text-[9px]">${sortField === c.key ? (sortAsc ? '▲' : '▼') : ''}</span>`;
+      th.addEventListener('click', () => { if (sortField === c.key) sortAsc = !sortAsc; else { sortField = c.key; sortAsc = true; } renderProductos(); });
+      row.appendChild(th);
+    });
+    const thAcc = document.createElement('th'); thAcc.className = 'px-3 py-2.5 no-print'; row.appendChild(thAcc);
+  }
+  function renderProductos() {
+    const term = ($('prodSearch').value || '').toLowerCase().trim();
+    let list = productos.filter(p => !term || (p.codigo || '').toLowerCase().includes(term) || (p.nombre || '').toLowerCase().includes(term));
+    list.sort((a, b) => {
+      const va = a[sortField], vb = b[sortField];
+      const numeric = sortField !== 'codigo' && sortField !== 'nombre';
+      const cmp = numeric ? (parseFloat(va) || 0) - (parseFloat(vb) || 0) : String(va || '').localeCompare(String(vb || ''));
+      return sortAsc ? cmp : -cmp;
+    });
+    buildProductHeader();
+    const body = $('prodBody'); body.innerHTML = '';
+    $('prodEmpty').classList.toggle('hidden', list.length > 0);
+    list.forEach(p => body.appendChild(productRow(p)));
+  }
+  function productRow(p) {
+    const tr = document.createElement('tr'); tr.className = 'border-t border-[var(--c-primary-50)] dark:border-[rgba(var(--c-primary-rgb),0.2)]';
+    PRODUCT_COLS.forEach(c => {
+      const td = document.createElement('td'); td.className = 'px-3 py-2';
+      const input = document.createElement('input');
+      input.type = c.type; if (c.type === 'number') input.step = '0.01';
+      input.value = p[c.key] ?? '';
+      input.className = 'text-xs font-medium py-1 focus:outline-none rounded';
+      input.addEventListener('change', () => { p[c.key] = c.type === 'number' ? parseFloat(input.value) || 0 : input.value; });
+      td.appendChild(input); tr.appendChild(td);
+    });
+    const tdAcc = document.createElement('td'); tdAcc.className = 'px-3 py-2 no-print whitespace-nowrap';
+    tdAcc.innerHTML = `<button class="save-prod mr-2" style="color:var(--c-primary-dark)" title="Guardar"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-check"/></svg></button><button class="del-prod text-red-500" title="Eliminar"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-trash"/></svg></button>`;
+    tdAcc.querySelector('.save-prod').addEventListener('click', () => saveProducto(p));
+    tdAcc.querySelector('.del-prod').addEventListener('click', () => deleteProducto(p));
+    tr.appendChild(tdAcc); return tr;
+  }
+  async function saveProducto(p) {
+    if (!p.codigo) { showToast('Introduce un código de producto'); return; }
+    if (p.id) await setDoc(doc(db, 'users', uid, 'productos', p.id), { ...p, updatedAt: serverTimestamp() }, { merge: true });
+    else { const ref = await addDoc(collection(db, 'users', uid, 'productos'), { ...p, createdAt: serverTimestamp() }); p.id = ref.id; }
+    showToast('Producto guardado ✅'); renderProductos();
+  }
+  async function deleteProducto(p) {
+    productos = productos.filter(x => x !== p);
+    if (p.id) await deleteDoc(doc(db, 'users', uid, 'productos', p.id));
+    renderProductos(); showToast('Producto eliminado');
+  }
+  function newProducto() { productos.unshift({ codigo: '', nombre: '', coste: 0, ivaRecargo: 0, rendimiento: 0, margen: 0, venta: 0, ventaReducida: 0 }); renderProductos(); }
+  function productosToCSV(list) {
+    const headers = PRODUCT_COLS.map(c => c.label);
+    const rows = list.map(p => PRODUCT_COLS.map(c => p[c.key] ?? ''));
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  }
+  async function enviarProductos() {
+    const csv = productosToCSV(productos);
+    if (navigator.share) { try { await navigator.share({ title: 'Productos Tótem&GO', text: csv }); return; } catch (e) {} }
+    downloadCSV(csv, 'productos_totemgo.csv');
+  }
+
+  // ==================== COSTES / VENTAS ====================
+  async function loadCostesVentasHoy() {
+    const hoy = todayISO(); costesHoy = {}; ventasHoy = {};
+    for (const tienda of STORES) {
+      const cSnap = await getDoc(doc(db, 'users', uid, 'costes', `${tienda}_${hoy}`));
+      costesHoy[tienda] = cSnap.exists() ? cSnap.data() : { pescado: 0, otros: 0 };
+      const vSnap = await getDoc(doc(db, 'users', uid, 'ventas', `${tienda}_${hoy}`));
+      ventasHoy[tienda] = vSnap.exists() ? vSnap.data() : { efectivo: 0, tarjeta: 0, bizum: 0 };
+    }
+  }
+  async function loadCostesVentasHistorial() {
+    const [cSnap, vSnap] = await Promise.all([getDocs(collection(db, 'users', uid, 'costes')), getDocs(collection(db, 'users', uid, 'ventas'))]);
+    const rows = [];
+    cSnap.docs.forEach(d => { const x = d.data(); if (x.pescado) rows.push({ fecha: x.fecha, tienda: x.tienda, tipo: 'coste', concepto: 'Pescado', importe: x.pescado }); if (x.otros) rows.push({ fecha: x.fecha, tienda: x.tienda, tipo: 'coste', concepto: 'Otros', importe: x.otros }); });
+    vSnap.docs.forEach(d => { const x = d.data(); if (x.efectivo) rows.push({ fecha: x.fecha, tienda: x.tienda, tipo: 'venta', concepto: 'Efectivo', importe: x.efectivo }); if (x.tarjeta) rows.push({ fecha: x.fecha, tienda: x.tienda, tipo: 'venta', concepto: 'Tarjeta', importe: x.tarjeta }); if (x.bizum) rows.push({ fecha: x.fecha, tienda: x.tienda, tipo: 'venta', concepto: 'Bizum', importe: x.bizum }); });
+    allMovimientos = rows; filteredMovimientos = [...rows];
+  }
+  function renderCostesTable() {
+    $('costesFechaLabel').textContent = new Date().toLocaleDateString('es-ES');
+    const body = $('costesBody'); body.innerHTML = '';
+    STORES.forEach(tienda => {
+      const data = costesHoy[tienda]; const tr = document.createElement('tr');
+      tr.className = 'border-t border-[var(--c-primary-50)] dark:border-[rgba(var(--c-primary-rgb),0.2)]';
+      tr.innerHTML = `<td class="px-4 py-3 font-semibold">${tienda}</td>
+        <td class="px-3 py-2 text-right"><input type="number" step="0.01" min="0" value="${data.pescado || 0}" class="w-24 text-right rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-2 py-1.5 text-sm"></td>
+        <td class="px-3 py-2 text-right"><input type="number" step="0.01" min="0" value="${data.otros || 0}" class="w-24 text-right rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-2 py-1.5 text-sm"></td>
+        <td class="px-2 py-2 text-center"><button class="save-linea" style="color:var(--c-primary-dark)"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-check"/></svg></button></td>`;
+      const inputs = tr.querySelectorAll('input');
+      tr.querySelector('.save-linea').addEventListener('click', () => guardarCoste(tienda, { pescado: parseFloat(inputs[0].value) || 0, otros: parseFloat(inputs[1].value) || 0 }));
+      body.appendChild(tr);
+    });
+  }
+  function renderVentasTable() {
+    $('ventasFechaLabel').textContent = new Date().toLocaleDateString('es-ES');
+    const body = $('ventasBody'); body.innerHTML = '';
+    STORES.forEach(tienda => {
+      const data = ventasHoy[tienda]; const tr = document.createElement('tr');
+      tr.className = 'border-t border-[var(--c-primary-50)] dark:border-[rgba(var(--c-primary-rgb),0.2)]';
+      tr.innerHTML = `<td class="px-4 py-3 font-semibold">${tienda}</td>
+        <td class="px-3 py-2 text-right"><input type="number" step="0.01" min="0" value="${data.efectivo || 0}" class="w-20 text-right rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-2 py-1.5 text-sm"></td>
+        <td class="px-3 py-2 text-right"><input type="number" step="0.01" min="0" value="${data.tarjeta || 0}" class="w-20 text-right rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-2 py-1.5 text-sm"></td>
+        <td class="px-3 py-2 text-right"><input type="number" step="0.01" min="0" value="${data.bizum || 0}" class="w-20 text-right rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-2 py-1.5 text-sm"></td>
+        <td class="px-2 py-2 text-center"><button class="save-linea" style="color:var(--c-primary-dark)"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-check"/></svg></button></td>`;
+      const inputs = tr.querySelectorAll('input');
+      tr.querySelector('.save-linea').addEventListener('click', () => guardarVenta(tienda, { efectivo: parseFloat(inputs[0].value) || 0, tarjeta: parseFloat(inputs[1].value) || 0, bizum: parseFloat(inputs[2].value) || 0 }));
+      body.appendChild(tr);
+    });
+  }
+  async function guardarCoste(tienda, data) {
+    const fecha = todayISO();
+    await setDoc(doc(db, 'users', uid, 'costes', `${tienda}_${fecha}`), { tienda, fecha, ...data }, { merge: true });
+    costesHoy[tienda] = data; showToast(`Costes de ${tienda} guardados ✅`);
+    await loadCostesVentasHistorial(); renderDashboard();
+  }
+  async function guardarVenta(tienda, data) {
+    const fecha = todayISO();
+    await setDoc(doc(db, 'users', uid, 'ventas', `${tienda}_${fecha}`), { tienda, fecha, ...data }, { merge: true });
+    ventasHoy[tienda] = data; showToast(`Ventas de ${tienda} guardadas ✅`);
+    await loadCostesVentasHistorial(); renderDashboard();
+  }
+  async function guardarTodosCostes() {
+    const rows = [...document.querySelectorAll('#costesBody tr')];
+    for (let i = 0; i < STORES.length; i++) { const inputs = rows[i].querySelectorAll('input'); await guardarCoste(STORES[i], { pescado: parseFloat(inputs[0].value) || 0, otros: parseFloat(inputs[1].value) || 0 }); }
+    showToast('Todos los costes guardados ✅');
+  }
+  async function guardarTodasVentas() {
+    const rows = [...document.querySelectorAll('#ventasBody tr')];
+    for (let i = 0; i < STORES.length; i++) { const inputs = rows[i].querySelectorAll('input'); await guardarVenta(STORES[i], { efectivo: parseFloat(inputs[0].value) || 0, tarjeta: parseFloat(inputs[1].value) || 0, bizum: parseFloat(inputs[2].value) || 0 }); }
+    showToast('Todas las ventas guardadas ✅');
+  }
+
+  // ==================== FICHAJE ====================
+  async function loadFichajesAll() { const snap = await getDocs(collection(db, 'users', uid, 'fichajes')); fichajesAll = snap.docs.map(d => ({ id: d.id, ...d.data() })); }
+  async function loadFichajeHoy() {
+    await loadFichajesAll();
+    const hoy = todayISO();
+    const registros = fichajesAll.filter(f => f.fechaLocal === hoy).sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+    renderFichajeHistory(registros);
+    ultimoFichajeTipo = registros.length ? registros[registros.length - 1].tipo : null;
+    updateFichajeButtons();
+  }
+  function updateFichajeButtons() {
+    const entrada = $('btnEntrada'), salida = $('btnSalida'), status = $('fichajeStatus');
+    if (ultimoFichajeTipo === 'entrada') {
+      entrada.disabled = true; entrada.classList.remove('pulse-beacon'); entrada.classList.add('opacity-40', 'pointer-events-none');
+      salida.disabled = false; salida.classList.add('pulse-beacon'); salida.classList.remove('opacity-40', 'pointer-events-none');
+      status.textContent = 'Turno en curso — no olvides fichar tu salida';
+    } else {
+      salida.disabled = true; salida.classList.remove('pulse-beacon'); salida.classList.add('opacity-40', 'pointer-events-none');
+      entrada.disabled = false; entrada.classList.add('pulse-beacon'); entrada.classList.remove('opacity-40', 'pointer-events-none');
+      status.textContent = ultimoFichajeTipo === 'salida' ? 'Jornada finalizada. ¡Buen trabajo!' : 'Aún no has fichado hoy';
+    }
+  }
+  async function fichar(tipo) {
+    const hora = new Date().toTimeString().slice(0, 5);
+    await addDoc(collection(db, 'users', uid, 'fichajes'), { tipo, hora, fechaLocal: todayISO(), timestamp: serverTimestamp() });
+    ultimoFichajeTipo = tipo; updateFichajeButtons();
+    showToast(tipo === 'entrada' ? 'Entrada registrada ✅' : 'Salida registrada ✅');
+    await loadFichajeHoy();
+  }
+  function renderFichajeHistory(registros) {
+    const wrap = $('fichajeHistory'); wrap.innerHTML = '';
+    if (!registros.length) { wrap.innerHTML = '<p class="text-xs text-ink/40 dark:text-surface/40 text-center py-6">Sin fichajes hoy</p>'; $('horasHoy').textContent = ''; return; }
+    registros.forEach(f => {
+      const row = document.createElement('div'); row.className = 'rounded-xl bg-white dark:bg-carddark shadow-soft px-4 py-3 flex items-center justify-between';
+      row.innerHTML = `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full grid place-items-center" style="background:${f.tipo === 'entrada' ? 'var(--c-primary-50)' : '#FDF3E3'}; color:${f.tipo === 'entrada' ? 'var(--c-primary-dark)' : '#C9821E'}"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#${f.tipo === 'entrada' ? 'ic-check' : 'ic-logout'}"/></svg></div><p class="text-sm font-semibold capitalize">${f.tipo}</p></div><span class="text-sm font-bold text-ink/60 dark:text-surface/60">${f.hora}</span>`;
+      wrap.appendChild(row);
+    });
+    let mins = 0;
+    for (let i = 0; i < registros.length - 1; i++) if (registros[i].tipo === 'entrada' && registros[i + 1].tipo === 'salida') {
+      const [h1, m1] = registros[i].hora.split(':').map(Number), [h2, m2] = registros[i + 1].hora.split(':').map(Number);
+      mins += (h2 * 60 + m2) - (h1 * 60 + m1);
+    }
+    $('horasHoy').textContent = mins > 0 ? `Tiempo trabajado hoy: ${Math.floor(mins / 60)}h ${mins % 60}m` : '';
+  }
+
+  // ==================== DOCUMENTOS · Balances ====================
+  function downloadCSV(csv, filename) {
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+  function calcularBalance() {
+    const desde = $('balDesde').value, hasta = $('balHasta').value, tiendaSel = $('balTienda').value;
+    const storesList = tiendaSel === 'todas' ? STORES : [tiendaSel];
+    const totals = {}; storesList.forEach(s => totals[s] = { pescado: 0, otros: 0, efectivo: 0, tarjeta: 0, bizum: 0 });
+    const claves = { Pescado: 'pescado', Otros: 'otros', Efectivo: 'efectivo', Tarjeta: 'tarjeta', Bizum: 'bizum' };
+    allMovimientos.filter(m => (!desde || m.fecha >= desde) && (!hasta || m.fecha <= hasta) && storesList.includes(m.tienda)).forEach(m => {
+      const k = claves[m.concepto];
+      if (k && totals[m.tienda]) totals[m.tienda][k] += Number(m.importe) || 0;
+    });
+    storesList.forEach(s => { totals[s].costes = totals[s].pescado + totals[s].otros; totals[s].ventas = totals[s].efectivo + totals[s].tarjeta + totals[s].bizum; });
+    lastBalance = { storesList, totals, desde, hasta };
+    renderBalanceTable(storesList, totals);
+    renderBalanceChart(storesList, totals);
+  }
+  function renderBalanceTable(storesList, totals) {
+    const sums = { pescado: 0, otros: 0, efectivo: 0, tarjeta: 0, bizum: 0, costes: 0, ventas: 0 };
+    storesList.forEach(s => { Object.keys(sums).forEach(k => sums[k] += totals[s][k]); });
+    const head = `<tr style="background:var(--c-primary-50); color:var(--c-primary-darker)" class="dark:!bg-[rgba(var(--c-primary-rgb),0.3)] dark:!text-surface text-xs">
+      <th class="text-left px-3 py-2.5 font-bold" rowspan="2">Tienda</th>
+      <th class="text-center px-3 py-1.5 font-bold" colspan="2">Costes</th>
+      <th class="text-center px-3 py-1.5 font-bold" colspan="3">Ventas</th>
+      <th class="text-center px-3 py-1.5 font-bold" colspan="2">Totales</th>
+    </tr>
+    <tr style="background:var(--c-primary-50); color:var(--c-primary-darker)" class="dark:!bg-[rgba(var(--c-primary-rgb),0.3)] dark:!text-surface text-[11px]">
+      <th class="text-right px-3 py-1.5 font-semibold">Pescado</th><th class="text-right px-3 py-1.5 font-semibold">Otros</th>
+      <th class="text-right px-3 py-1.5 font-semibold">Efectivo</th><th class="text-right px-3 py-1.5 font-semibold">Tarjeta</th><th class="text-right px-3 py-1.5 font-semibold">Bizum</th>
+      <th class="text-right px-3 py-1.5 font-semibold">Costes</th><th class="text-right px-3 py-1.5 font-semibold">Ventas</th>
+    </tr>`;
+    const rows = storesList.map(s => `<tr class="border-t border-[var(--c-primary-50)] dark:border-[rgba(var(--c-primary-rgb),0.2)] text-xs">
+      <td class="px-3 py-2 font-semibold">${s}</td>
+      <td class="px-3 py-2 text-right">${eur(totals[s].pescado)}</td><td class="px-3 py-2 text-right">${eur(totals[s].otros)}</td>
+      <td class="px-3 py-2 text-right">${eur(totals[s].efectivo)}</td><td class="px-3 py-2 text-right">${eur(totals[s].tarjeta)}</td><td class="px-3 py-2 text-right">${eur(totals[s].bizum)}</td>
+      <td class="px-3 py-2 text-right font-bold text-amber-700">${eur(totals[s].costes)}</td><td class="px-3 py-2 text-right font-bold" style="color:var(--c-primary-dark)">${eur(totals[s].ventas)}</td>
+    </tr>`).join('');
+    const totalRow = `<tr class="border-t-2 font-bold text-xs" style="border-color:var(--c-primary)">
+      <td class="px-3 py-2.5">TOTAL</td>
+      <td class="px-3 py-2.5 text-right">${eur(sums.pescado)}</td><td class="px-3 py-2.5 text-right">${eur(sums.otros)}</td>
+      <td class="px-3 py-2.5 text-right">${eur(sums.efectivo)}</td><td class="px-3 py-2.5 text-right">${eur(sums.tarjeta)}</td><td class="px-3 py-2.5 text-right">${eur(sums.bizum)}</td>
+      <td class="px-3 py-2.5 text-right text-amber-700">${eur(sums.costes)}</td><td class="px-3 py-2.5 text-right" style="color:var(--c-primary-dark)">${eur(sums.ventas)}</td>
+    </tr>`;
+    $('balanceTableWrap').innerHTML = `<table class="w-full"><thead>${head}</thead><tbody>${rows}${totalRow}</tbody></table>`;
+  }
+  function renderBalanceChart(storesList, totals) {
+    const canvas = $('balanceChart'); const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--c-primary').trim() || '#0F6B5C';
+    const costeColor = '#E8A33D';
+    const max = Math.max(1, ...storesList.flatMap(s => [totals[s].ventas, totals[s].costes]));
+    const groupW = W / storesList.length; const barW = groupW * 0.24; const gap = groupW * 0.06;
+    const baseY = H - 34;
+    ctx.textAlign = 'center'; ctx.font = '12px "Plus Jakarta Sans", sans-serif';
+    storesList.forEach((s, i) => {
+      const cx = groupW * i + groupW / 2;
+      const vH = (totals[s].ventas / max) * (H - 70), cH = (totals[s].costes / max) * (H - 70);
+      ctx.fillStyle = primary; ctx.fillRect(cx - barW - gap / 2, baseY - vH, barW, vH);
+      ctx.fillStyle = costeColor; ctx.fillRect(cx + gap / 2, baseY - cH, barW, cH);
+      ctx.fillStyle = '#1A2420'; ctx.fillText(s, cx, baseY + 20);
+    });
+    ctx.textAlign = 'left';
+    ctx.fillStyle = primary; ctx.fillRect(16, 12, 12, 12); ctx.fillStyle = '#1A2420'; ctx.fillText('Ventas', 34, 22);
+    ctx.fillStyle = costeColor; ctx.fillRect(110, 12, 12, 12); ctx.fillStyle = '#1A2420'; ctx.fillText('Costes', 128, 22);
+  }
+  function exportarGraficoPNG() {
+    if (!lastBalance) { showToast('Consulta primero los datos'); return; }
+    const canvas = $('balanceChart');
+    const a = document.createElement('a'); a.href = canvas.toDataURL('image/png');
+    a.download = `grafico_balance_${lastBalance.desde || 'inicio'}_${lastBalance.hasta || todayISO()}.png`;
+    a.click();
+    showToast('Gráfico descargado ✅');
+  }
+  function exportarBalanceExcel() {
+    if (!lastBalance) { showToast('Consulta primero los datos'); return; }
+    if (typeof XLSX === 'undefined') { showToast('No se pudo cargar el generador de Excel'); return; }
+    const { storesList, totals } = lastBalance;
+    const header1 = ['Tienda', 'Costes', '', 'Ventas', '', '', 'Totales', ''];
+    const header2 = ['', 'Pescado', 'Otros', 'Efectivo', 'Tarjeta', 'Bizum', 'Total Costes', 'Total Ventas'];
+    const rows = storesList.map(s => [s, totals[s].pescado, totals[s].otros, totals[s].efectivo, totals[s].tarjeta, totals[s].bizum, totals[s].costes, totals[s].ventas]);
+    const sums = ['TOTAL', 0, 0, 0, 0, 0, 0, 0];
+    storesList.forEach(s => { sums[1] += totals[s].pescado; sums[2] += totals[s].otros; sums[3] += totals[s].efectivo; sums[4] += totals[s].tarjeta; sums[5] += totals[s].bizum; sums[6] += totals[s].costes; sums[7] += totals[s].ventas; });
+    const aoa = [header1, header2, ...rows, sums];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!merges'] = [{ s: { r: 0, c: 1 }, e: { r: 0, c: 2 } }, { s: { r: 0, c: 3 }, e: { r: 0, c: 5 } }, { s: { r: 0, c: 6 }, e: { r: 0, c: 7 } }];
+    ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 13 }, { wch: 13 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Balance');
+    XLSX.writeFile(wb, `balance_totemgo_${lastBalance.desde || 'inicio'}_${lastBalance.hasta || todayISO()}.xlsx`);
+    showToast('Excel descargado ✅');
+  }
+
+  // ==================== DASHBOARD ====================
+  function renderDashboard() {
+    const ventas = STORES.reduce((a, s) => a + (ventasHoy[s].efectivo || 0) + (ventasHoy[s].tarjeta || 0) + (ventasHoy[s].bizum || 0), 0);
+    const costes = STORES.reduce((a, s) => a + (costesHoy[s].pescado || 0) + (costesHoy[s].otros || 0), 0);
+    $('statVentas').textContent = eur(ventas); $('statCostes').textContent = eur(costes);
+    const balance = ventas - costes; const balEl = $('statBalance');
+    balEl.textContent = eur(balance);
+    balEl.style.color = balance >= 0 ? 'var(--c-primary-dark)' : '#dc2626';
+  }
+  function renderInicioHeader() {
+    const h = new Date().getHours();
+    const saludo = h < 12 ? 'Buenos días' : h < 20 ? 'Buenas tardes' : 'Buenas noches';
+    $('greetTime').textContent = saludo;
+    $('greetName').textContent = `${saludo}, ${profileConfig.nombre ? profileConfig.nombre.split(' ')[0] : 'usuario'} 👋`;
+    $('greetDate').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + (profileConfig.tienda ? ` · ${profileConfig.tienda}` : '');
+    $('greetQuote').textContent = '“' + QUOTES[Math.floor(Math.random() * QUOTES.length)] + '”';
+  }
+
+  // ==================== WIDGETS DE INICIO (opcionales, activables en Mi cuenta) ====================
+  function applyWidgetVisibility() {
+    $('widgetFichaje').classList.toggle('hidden', !profileConfig.widgetsInicio.fichaje);
+    $('widgetAccesos').classList.toggle('hidden', !profileConfig.widgetsInicio.accesos);
+    $('widgetGrafico').classList.toggle('hidden', !profileConfig.widgetsInicio.grafico);
+    $('widgetEventos').classList.toggle('hidden', !profileConfig.widgetsInicio.eventos);
+    $('widgetEnlaces').classList.toggle('hidden', !profileConfig.widgetsInicio.enlaces);
+  }
+  function renderWidgetFichaje() {
+    const estado = $('inicioFichajeEstado'), btn = $('btnInicioFichar');
+    if (ultimoFichajeTipo === 'entrada') { estado.textContent = 'Turno en curso'; btn.textContent = 'Fichar salida'; }
+    else if (ultimoFichajeTipo === 'salida') { estado.textContent = 'Jornada finalizada'; btn.textContent = 'Fichar entrada'; }
+    else { estado.textContent = 'Sin fichar hoy'; btn.textContent = 'Fichar entrada'; }
+    btn.onclick = () => fichar(ultimoFichajeTipo === 'entrada' ? 'salida' : 'entrada').then(() => { renderWidgetFichaje(); });
+  }
+  function renderWidgetAccesos() {
+    const grid = $('accesosGrid'); grid.innerHTML = '';
+    FAV_CATALOG.forEach(item => {
+      const b = document.createElement('button');
+      b.className = 'rounded-2xl bg-white dark:bg-carddark shadow-soft p-3 flex flex-col items-center gap-1.5 active:scale-95 transition';
+      b.innerHTML = `<span class="text-xl">${item.icono}</span><span class="text-[10px] font-semibold text-center leading-tight">${item.nombre}</span>`;
+      b.addEventListener('click', () => { setView(item.ruta); if (item.sub) setSub(item.sub); if (item.docsub) setDocSub(item.docsub); });
+      grid.appendChild(b);
+    });
+  }
+  function renderWidgetGrafico7d() {
+    const canvas = $('miniChart7d'); if (!canvas) return;
+    const ctx = canvas.getContext('2d'); const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const dias = [];
+    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); dias.push(d.toISOString().slice(0, 10)); }
+    const totals = {}; dias.forEach(f => totals[f] = { venta: 0, coste: 0 });
+    allMovimientos.forEach(m => { if (totals[m.fecha]) totals[m.fecha][m.tipo] += Number(m.importe) || 0; });
+    const max = Math.max(1, ...dias.flatMap(f => [totals[f].venta, totals[f].coste]));
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--c-primary').trim() || '#0F6B5C';
+    const groupW = W / dias.length; const barW = groupW * 0.24; const gap = groupW * 0.06; const baseY = H - 22;
+    ctx.font = '10px "Plus Jakarta Sans", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#1A2420';
+    dias.forEach((f, i) => {
+      const cx = groupW * i + groupW / 2;
+      const vH = (totals[f].venta / max) * (H - 40), cH = (totals[f].coste / max) * (H - 40);
+      ctx.fillStyle = primary; ctx.fillRect(cx - barW - gap / 2, baseY - vH, barW, Math.max(2, vH));
+      ctx.fillStyle = '#E8A33D'; ctx.fillRect(cx + gap / 2, baseY - cH, barW, Math.max(2, cH));
+      ctx.fillStyle = '#1A2420'; ctx.fillText(f.slice(8), cx, baseY + 14);
+    });
+  }
+  function renderWidgetEventos() {
+    const hoy = todayISO();
+    const proximos = eventos.filter(e => e.fecha >= hoy).sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.hora || '').localeCompare(b.hora || '')).slice(0, 3);
+    const wrap = $('proximosEventosList'); wrap.innerHTML = '';
+    if (!proximos.length) { wrap.innerHTML = '<p class="text-xs text-ink/40 dark:text-surface/40 rounded-2xl bg-white dark:bg-carddark shadow-soft px-4 py-4 text-center">Sin eventos próximos</p>'; return; }
+    proximos.forEach(e => {
+      const row = document.createElement('div');
+      row.className = 'rounded-xl bg-white dark:bg-carddark shadow-soft px-4 py-3 flex items-center gap-3 cursor-pointer';
+      const fechaFmt = new Date(e.fecha + 'T00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+      row.innerHTML = `<span class="color-dot shrink-0" style="background:${e.color}"></span><div class="min-w-0 flex-1"><p class="text-sm font-semibold truncate">${e.titulo}</p><p class="text-[11px] text-ink/40 dark:text-surface/40">${fechaFmt}${e.hora ? ' · ' + e.hora : ''}</p></div>`;
+      row.addEventListener('click', () => { setView('tienda'); setSub('calendario'); calendarDate = new Date(e.fecha + 'T00:00'); renderCalendar(); });
+      wrap.appendChild(row);
+    });
+  }
+  function renderInicioWidgets() {
+    applyWidgetVisibility();
+    renderWidgetFichaje();
+    renderWidgetAccesos();
+    renderWidgetGrafico7d();
+    renderWidgetEventos();
+    renderWidgetEnlaces();
+  }
+
+  // ==================== ORDEN PERSONALIZADO DE INICIO (arrastrar y soltar) ====================
+  function applyInicioOrder() {
+    const container = $('inicioBlocksContainer');
+    const order = profileConfig.ordenInicio && profileConfig.ordenInicio.length === ORDENABLE_BLOCKS.length ? profileConfig.ordenInicio : ORDENABLE_BLOCKS.map(b => b.id);
+    order.forEach(id => {
+      const el = $('block' + id.charAt(0).toUpperCase() + id.slice(1));
+      if (el) container.appendChild(el);
+    });
+  }
+  function openReorderModal() {
+    const order = profileConfig.ordenInicio && profileConfig.ordenInicio.length === ORDENABLE_BLOCKS.length ? profileConfig.ordenInicio : ORDENABLE_BLOCKS.map(b => b.id);
+    const list = order.map(id => ORDENABLE_BLOCKS.find(b => b.id === id)).filter(Boolean);
+    $('modalPanel').innerHTML = `
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-extrabold text-base">Reordenar Inicio</h3>
+        <button id="closeModal" class="text-ink/40 dark:text-surface/40 text-xl leading-none">&times;</button>
+      </div>
+      <p class="text-xs text-ink/50 dark:text-surface/50 mb-4">Mantén pulsado <b>⠿</b> y arrastra cada bloque para cambiar el orden en el que aparece en Inicio.</p>
+      <div id="reorderList" class="space-y-2"></div>`;
+    const wrap = $('reorderList');
+    list.forEach(b => {
+      const row = document.createElement('div');
+      row.className = 'reorder-row flex items-center gap-3 rounded-xl bg-surface dark:bg-surfacedark px-3 py-3';
+      row.dataset.id = b.id;
+      row.innerHTML = `<span class="drag-handle cursor-grab active:cursor-grabbing text-xl leading-none select-none px-1" style="touch-action:none; color:var(--c-primary-dark)">⠿</span><span class="text-lg">${b.icono}</span><span class="text-sm font-semibold flex-1">${b.nombre}</span>`;
+      wrap.appendChild(row);
+    });
+    wireReorderDrag();
+    $('closeModal').addEventListener('click', () => { guardarOrdenInicio(); closeModal(); });
+    $('modalOverlay').classList.remove('hidden');
+  }
+  function guardarOrdenInicio() {
+    const rows = [...document.querySelectorAll('#reorderList .reorder-row')];
+    if (!rows.length) return;
+    profileConfig.ordenInicio = rows.map(r => r.dataset.id);
+    saveProfile();
+    applyInicioOrder();
+  }
+  function wireReorderDrag() {
+    const wrap = $('reorderList');
+    wrap.querySelectorAll('.drag-handle').forEach(handle => {
+      handle.addEventListener('pointerdown', (e) => {
+        const dragEl = handle.closest('.reorder-row');
+        dragEl.setPointerCapture(e.pointerId);
+        dragEl.classList.add('opacity-60');
+        const onMove = (ev) => {
+          const rows = [...wrap.querySelectorAll('.reorder-row')];
+          const y = ev.clientY;
+          const target = rows.find(r => r !== dragEl && y < r.getBoundingClientRect().top + r.getBoundingClientRect().height / 2);
+          if (target) wrap.insertBefore(dragEl, target); else wrap.appendChild(dragEl);
+        };
+        const onUp = () => {
+          dragEl.classList.remove('opacity-60');
+          try { dragEl.releasePointerCapture(e.pointerId); } catch (err) {}
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+          guardarOrdenInicio();
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      });
+    });
+  }
+
+  // ==================== DOCUMENTOS DE INTERÉS (accesos directos en Inicio) ====================
+  async function loadEnlaces() {
+    const snap = await getDocs(collection(db, 'users', uid, 'enlaces'));
+    enlaces = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  function renderWidgetEnlaces() {
+    const wrap = $('enlacesList'); if (!wrap) return;
+    wrap.innerHTML = '';
+    $('enlacesEmpty').classList.toggle('hidden', enlaces.length > 0);
+    enlaces.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'rounded-2xl bg-white dark:bg-carddark shadow-soft p-3 relative';
+      card.innerHTML = `
+        <button class="del-enlace absolute top-1.5 right-1.5 text-red-400"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none"><use href="#ic-trash"/></svg></button>
+        <a href="${item.url}" target="_blank" rel="noopener" class="flex flex-col items-center gap-1.5 pt-1.5 text-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" style="color:var(--c-primary-dark)"><use href="#${item.tipo === 'archivo' ? 'ic-doc' : 'ic-link'}"/></svg>
+          <span class="text-[10px] font-semibold leading-tight line-clamp-2">${item.titulo}</span>
+        </a>`;
+      card.querySelector('.del-enlace').addEventListener('click', () => eliminarEnlace(item));
+      wrap.appendChild(card);
+    });
+  }
+  async function eliminarEnlace(item) {
+    await deleteDoc(doc(db, 'users', uid, 'enlaces', item.id));
+    enlaces = enlaces.filter(x => x.id !== item.id);
+    renderWidgetEnlaces();
+    showToast('Acceso eliminado');
+  }
+  function openEnlaceModal() {
+    const opcionesArchivos = [
+      ...albaranes.map(a => ({ ...a, kind: 'albaranes' })),
+      ...etiquetas.map(a => ({ ...a, kind: 'etiquetas' })),
+    ];
+    const selectOptions = opcionesArchivos.map((f, i) => `<option value="${i}">${f.kind === 'albaranes' ? '📦' : '🏷️'} ${f.nombre}</option>`).join('');
+    $('modalPanel').innerHTML = `
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-extrabold text-base">Nuevo acceso directo</h3>
+        <button id="closeModal" class="text-ink/40 dark:text-surface/40 text-xl leading-none">&times;</button>
+      </div>
+      <form id="enlaceForm" class="space-y-3">
+        <input required id="enlTitulo" placeholder="Título (ej. Manual de proveedor)" class="w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm">
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" data-tipo="externo" class="enlace-tipo-btn rounded-xl py-2.5 text-sm font-bold border-2">Enlace externo</button>
+          <button type="button" data-tipo="archivo" class="enlace-tipo-btn rounded-xl py-2.5 text-sm font-bold border-2">Archivo subido</button>
+        </div>
+        <div id="enlaceExternoWrap">
+          <input id="enlUrl" type="url" placeholder="https://..." class="w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm">
+        </div>
+        <div id="enlaceArchivoWrap" class="hidden">
+          ${opcionesArchivos.length ? `<select id="enlArchivo" class="w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm">${selectOptions}</select>` : `<p class="text-xs text-ink/40 dark:text-surface/40">Todavía no has subido ningún albarán o etiqueta. Sube uno desde Documentos → Albaranes/Etiquetas, o usa un enlace externo.</p>`}
+        </div>
+        <button type="submit" class="w-full rounded-xl text-white font-bold py-2.5" style="background:var(--c-primary)">Guardar acceso</button>
+      </form>`;
+    let tipoSel = 'externo';
+    function paintTipo() {
+      document.querySelectorAll('.enlace-tipo-btn').forEach(b => {
+        const active = b.dataset.tipo === tipoSel;
+        b.className = 'enlace-tipo-btn rounded-xl py-2.5 text-sm font-bold border-2 transition ' + (active ? 'text-white' : 'text-ink/60 dark:text-surface/60');
+        b.style.background = active ? 'var(--c-primary)' : 'transparent';
+        b.style.borderColor = active ? 'var(--c-primary)' : 'var(--c-primary-100)';
+      });
+      $('enlaceExternoWrap').classList.toggle('hidden', tipoSel !== 'externo');
+      $('enlaceArchivoWrap').classList.toggle('hidden', tipoSel !== 'archivo');
+    }
+    paintTipo();
+    document.querySelectorAll('.enlace-tipo-btn').forEach(b => b.addEventListener('click', () => { tipoSel = b.dataset.tipo; paintTipo(); }));
+    $('closeModal').addEventListener('click', closeModal);
+    $('enlaceForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const titulo = $('enlTitulo').value.trim();
+      let url = '', origen = '';
+      if (tipoSel === 'externo') {
+        url = $('enlUrl').value.trim();
+        if (!url) { showToast('Introduce una URL'); return; }
+      } else {
+        if (!opcionesArchivos.length) { showToast('No hay archivos subidos todavía'); return; }
+        const f = opcionesArchivos[parseInt($('enlArchivo').value, 10)];
+        url = f.url; origen = f.kind;
+      }
+      const nuevo = { titulo, tipo: tipoSel, url, origen, createdAt: serverTimestamp() };
+      const ref = await addDoc(collection(db, 'users', uid, 'enlaces'), nuevo);
+      enlaces.push({ id: ref.id, ...nuevo });
+      renderWidgetEnlaces();
+      closeModal();
+      showToast('Acceso guardado ✅');
+    });
+    $('modalOverlay').classList.remove('hidden');
+  }
+
+  // ==================== CALENDARIO ====================
+  async function loadEventos() { const snap = await getDocs(collection(db, 'users', uid, 'eventos')); eventos = snap.docs.map(d => ({ id: d.id, ...d.data() })); eventos.forEach(scheduleAlert); }
+  function renderCalendar() {
+    const year = calendarDate.getFullYear(), month = calendarDate.getMonth();
+    $('calMonthLabel').textContent = calendarDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    const first = new Date(year, month, 1); const startWeekday = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const grid = $('calGrid'); grid.innerHTML = '';
+    for (let i = 0; i < startWeekday; i++) grid.appendChild(document.createElement('div'));
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dayEvents = eventos.filter(e => e.fecha === dateStr);
+      const isToday = dateStr === todayISO();
+      const cell = document.createElement('button');
+      cell.className = 'aspect-square rounded-xl flex flex-col items-center justify-center gap-1 text-xs font-semibold ' + (isToday ? 'text-white' : 'bg-surface dark:bg-surfacedark hover:bg-[var(--c-primary-50)] dark:hover:bg-[rgba(var(--c-primary-rgb),0.2)]');
+      if (isToday) cell.style.background = 'var(--c-primary)';
+      const dots = dayEvents.slice(0, 3).map(e => `<span class="color-dot" style="background:${e.color}"></span>`).join('');
+      cell.innerHTML = `<span>${d}</span><span class="flex gap-0.5">${dots}</span>`;
+      cell.addEventListener('click', () => openDayModal(dateStr));
+      grid.appendChild(cell);
+    }
+  }
+  function openDayModal(dateStr) {
+    const dayEvents = eventos.filter(e => e.fecha === dateStr);
+    const listHtml = dayEvents.length ? dayEvents.map(e => `
+      <div class="flex items-center justify-between py-2 border-b border-[var(--c-primary-50)] dark:border-[rgba(var(--c-primary-rgb),0.2)]">
+        <div class="flex items-center gap-2 min-w-0"><span class="color-dot shrink-0" style="background:${e.color}"></span><div class="min-w-0"><p class="text-sm font-semibold truncate">${e.titulo}</p><p class="text-[11px] text-ink/40 dark:text-surface/40">${e.hora || 'Todo el día'} ${e.alerta ? '· 🔔' : ''}</p></div></div>
+        <button class="del-evento text-red-500 shrink-0" data-id="${e.id}"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-trash"/></svg></button>
+      </div>`).join('') : '<p class="text-xs text-ink/40 dark:text-surface/40 py-2">Sin anotaciones este día</p>';
+    const colorButtons = EVENT_COLORS.map((c, i) => `<button type="button" class="color-pick w-7 h-7 rounded-full border-2 ${i === 0 ? 'border-ink dark:border-white' : 'border-transparent'}" data-color="${c}" style="background:${c}"></button>`).join('');
+    $('modalPanel').innerHTML = `
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-extrabold text-base">${new Date(dateStr + 'T00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</h3>
+        <button id="closeModal" class="text-ink/40 dark:text-surface/40 text-xl leading-none">&times;</button>
+      </div>
+      <div id="dayEventsList" class="mb-4">${listHtml}</div>
+      <form id="eventoForm" class="space-y-3 border-t border-[var(--c-primary-50)] dark:border-[rgba(var(--c-primary-rgb),0.2)] pt-4">
+        <input required id="evTitulo" placeholder="Título de la anotación" class="w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm">
+        <div class="flex items-center gap-2">${colorButtons}<input type="hidden" id="evColor" value="${EVENT_COLORS[0]}"></div>
+        <div class="flex items-center gap-3"><input type="time" id="evHora" class="flex-1 rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm"><label class="flex items-center gap-1.5 text-xs font-semibold"><input type="checkbox" id="evAlerta"> Avisarme</label></div>
+        <button type="submit" class="w-full rounded-xl text-white font-bold py-2.5" style="background:var(--c-primary)">Añadir anotación</button>
+      </form>`;
+    $('modalPanel').querySelectorAll('.color-pick').forEach(b => b.addEventListener('click', () => { $('evColor').value = b.dataset.color; $('modalPanel').querySelectorAll('.color-pick').forEach(x => x.classList.remove('border-ink', 'dark:border-white')); b.classList.add('border-ink', 'dark:border-white'); }));
+    $('modalPanel').querySelectorAll('.del-evento').forEach(b => b.addEventListener('click', async () => { await deleteDoc(doc(db, 'users', uid, 'eventos', b.dataset.id)); eventos = eventos.filter(e => e.id !== b.dataset.id); renderCalendar(); openDayModal(dateStr); }));
+    $('closeModal').addEventListener('click', closeModal);
+    $('eventoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nuevo = { fecha: dateStr, titulo: $('evTitulo').value.trim(), color: $('evColor').value, hora: $('evHora').value, alerta: $('evAlerta').checked, createdAt: serverTimestamp() };
+      const ref = await addDoc(collection(db, 'users', uid, 'eventos'), nuevo);
+      nuevo.id = ref.id; eventos.push(nuevo); scheduleAlert(nuevo); renderCalendar(); openDayModal(dateStr);
+    });
+    $('modalOverlay').classList.remove('hidden');
+  }
+  function scheduleAlert(ev) {
+    if (!ev.alerta || !('Notification' in window)) return;
+    const diff = new Date(`${ev.fecha}T${ev.hora || '09:00'}`) - new Date();
+    if (diff <= 0 || diff > 2 ** 31 - 1) return;
+    setTimeout(() => { if (Notification.permission === 'granted') new Notification(ev.titulo, { body: `Tótem&GO · ${ev.fecha}`, tag: ev.id }); }, diff);
+  }
+
+  // ==================== ALBARANES / ETIQUETAS (Firebase Storage) ====================
+  async function loadArchivos(kind) {
+    const snap = await getDocs(collection(db, 'users', uid, kind));
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (kind === 'albaranes') albaranes = list; else etiquetas = list;
+  }
+  async function subirArchivo(kind, file) {
+    showToast('Subiendo archivo...');
+    try {
+      const path = `${kind}/${uid}/${Date.now()}_${file.name}`;
+      const r = sref(storage, path);
+      await uploadBytes(r, file);
+      const url = await getDownloadURL(r);
+      const fecha = todayISO();
+      const item = { nombre: file.name, fecha, url, path, tipo: file.type, createdAt: serverTimestamp() };
+      const ref = await addDoc(collection(db, 'users', uid, kind), item);
+      const localItem = { id: ref.id, ...item };
+      if (kind === 'albaranes') albaranes.unshift(localItem); else etiquetas.unshift(localItem);
+      renderArchivos(kind);
+      showToast('Archivo guardado en la nube ✅');
+    } catch (err) {
+      console.error(err); showToast('No se pudo subir el archivo. Inténtalo de nuevo.');
+    }
+  }
+  async function eliminarArchivo(kind, item) {
+    await deleteObject(sref(storage, item.path)).catch(() => {});
+    await deleteDoc(doc(db, 'users', uid, kind, item.id));
+    if (kind === 'albaranes') albaranes = albaranes.filter(x => x.id !== item.id); else etiquetas = etiquetas.filter(x => x.id !== item.id);
+    renderArchivos(kind);
+    showToast('Archivo eliminado');
+  }
+  function renderArchivos(kind) {
+    const list = (kind === 'albaranes' ? albaranes : etiquetas).slice().sort((a, b) => ordenArchivosDesc[kind] ? b.fecha.localeCompare(a.fecha) : a.fecha.localeCompare(b.fecha));
+    const wrap = $(kind === 'albaranes' ? 'albaranesList' : 'etiquetasList');
+    $(kind === 'albaranes' ? 'albaranesEmpty' : 'etiquetasEmpty').classList.toggle('hidden', list.length > 0);
+    wrap.innerHTML = '';
+    list.forEach(item => {
+      const isImg = (item.tipo || '').startsWith('image/');
+      const card = document.createElement('div');
+      card.className = 'rounded-xl overflow-hidden shadow-soft bg-white dark:bg-carddark';
+      card.innerHTML = `
+        <a href="${item.url}" target="_blank" rel="noopener" class="block aspect-square bg-[var(--c-primary-50)] dark:bg-[rgba(var(--c-primary-rgb),0.2)] flex items-center justify-center overflow-hidden">
+          ${isImg ? `<img src="${item.url}" class="w-full h-full object-cover">` : `<svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" style="color:var(--c-primary-dark)"><use href="#ic-doc"/></svg>`}
+        </a>
+        <div class="p-2">
+          <p class="text-[11px] font-semibold truncate">${item.nombre}</p>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-[10px] text-ink/40 dark:text-surface/40">${item.fecha}</span>
+            <button class="del-archivo text-red-500"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><use href="#ic-trash"/></svg></button>
+          </div>
+        </div>`;
+      card.querySelector('.del-archivo').addEventListener('click', () => eliminarArchivo(kind, item));
+      wrap.appendChild(card);
+    });
+  }
+
+  // ==================== CREAR ALBARÁN (solo master) ====================
+  const ALB_SUBS = [{ id: 'nuevo', label: 'Nuevo' }, { id: 'historial', label: 'Historial' }];
+  function buildAlbaranSubTabs() {
+    const wrap = $('albaranSubTabs'); if (!wrap) return;
+    wrap.innerHTML = '';
+    ALB_SUBS.forEach(t => {
+      const b = document.createElement('button');
+      b.dataset.albsub = t.id; b.className = 'alb-sub-tab shrink-0 rounded-full px-4 py-2 text-xs font-bold border-2 transition';
+      b.textContent = t.label; b.addEventListener('click', () => setAlbaranSub(t.id));
+      wrap.appendChild(b);
+    });
+    paintAlbaranSubTabs();
+  }
+  function paintAlbaranSubTabs() {
+    document.querySelectorAll('.alb-sub-tab').forEach(b => {
+      const active = b.dataset.albsub === currentAlbSub;
+      b.className = 'alb-sub-tab shrink-0 rounded-full px-4 py-2 text-xs font-bold border-2 transition ' + (active ? 'text-white' : 'text-ink/60 dark:text-surface/60');
+      b.style.background = active ? 'var(--c-primary)' : 'transparent';
+      b.style.borderColor = active ? 'var(--c-primary)' : 'var(--c-primary-100)';
+    });
+  }
+  function setAlbaranSub(sub) {
+    currentAlbSub = sub; paintAlbaranSubTabs();
+    document.querySelectorAll('[data-albsubview]').forEach(el => el.classList.toggle('active', el.dataset.albsubview === sub));
+    if (sub === 'historial') renderHistorialAlbaranes();
+  }
+
+  function renderProductosDatalist() {
+    const dl = $('productosDatalist'); if (!dl) return;
+    dl.innerHTML = productos.map(p => `<option value="${p.nombre}">`).join('');
+  }
+  function nuevaLineaAlbaran() { lineasAlbaran.push({ codigo: '', nombre: '', peso: 1, precio: 0 }); renderLineasAlbaran(); }
+  function renderLineasAlbaran() {
+    const wrap = $('lineasAlbaranWrap'); if (!wrap) return;
+    wrap.innerHTML = '';
+    if (!lineasAlbaran.length) { wrap.innerHTML = '<p class="text-xs text-ink/40 dark:text-surface/40 text-center py-4">Añade al menos una línea</p>'; recalcularTotalesAlbaran(); return; }
+    lineasAlbaran.forEach((l, i) => {
+      const row = document.createElement('div');
+      row.className = 'rounded-xl bg-surface dark:bg-surfacedark p-3 space-y-2';
+      row.innerHTML = `
+        <div class="flex gap-2">
+          <input list="productosDatalist" placeholder="Producto" value="${l.nombre}" data-f="nombre" class="flex-1 rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-white dark:bg-carddark px-2.5 py-2 text-sm">
+          <button class="del-linea-alb text-red-500 shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-trash"/></svg></button>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <input placeholder="Código" value="${l.codigo}" data-f="codigo" class="rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-white dark:bg-carddark px-2 py-1.5 text-xs">
+          <input type="number" step="0.01" min="0" placeholder="Peso/Cant." value="${l.peso}" data-f="peso" class="rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-white dark:bg-carddark px-2 py-1.5 text-xs text-right">
+          <input type="number" step="0.01" min="0" placeholder="Precio €" value="${l.precio}" data-f="precio" class="rounded-lg border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-white dark:bg-carddark px-2 py-1.5 text-xs text-right">
+        </div>
+        <p class="importe-linea text-right text-xs font-bold" style="color:var(--c-primary-dark)">Importe: ${eur((l.peso || 0) * (l.precio || 0))}</p>`;
+      row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+        const f = inp.dataset.f;
+        lineasAlbaran[i][f] = (f === 'peso' || f === 'precio') ? parseFloat(inp.value) || 0 : inp.value;
+        if (f === 'nombre') {
+          const match = productos.find(p => p.nombre === inp.value);
+          if (match) { lineasAlbaran[i].codigo = match.codigo || ''; lineasAlbaran[i].precio = Number(match.venta) || lineasAlbaran[i].precio; renderLineasAlbaran(); return; }
+        }
+        row.querySelector('.importe-linea').textContent = 'Importe: ' + eur((lineasAlbaran[i].peso || 0) * (lineasAlbaran[i].precio || 0));
+        recalcularTotalesAlbaran();
+      }));
+      row.querySelector('.del-linea-alb').addEventListener('click', () => { lineasAlbaran.splice(i, 1); renderLineasAlbaran(); });
+      wrap.appendChild(row);
+    });
+    recalcularTotalesAlbaran();
+  }
+  function recalcularTotalesAlbaran() {
+    const subtotal = lineasAlbaran.reduce((a, l) => a + (Number(l.peso) || 0) * (Number(l.precio) || 0), 0);
+    const ivaPct = parseFloat($('albIva').value) || 0;
+    const ivaImporte = subtotal * ivaPct / 100;
+    const total = subtotal + ivaImporte;
+    $('albSubtotal').textContent = eur(subtotal);
+    $('albTotal').textContent = eur(total);
+    return { subtotal, ivaPct, ivaImporte, total };
+  }
+  function resetAlbaranForm() {
+    albaranEditandoId = null;
+    $('albCliNombre').value = ''; $('albCliNif').value = ''; $('albCliTelefono').value = ''; $('albCliDireccion').value = '';
+    $('albIva').value = empresaConfig.ivaDefault ?? 21;
+    lineasAlbaran = [];
+    renderLineasAlbaran();
+  }
+  async function guardarAlbaran(triggerPrint) {
+    const nombre = $('albCliNombre').value.trim();
+    if (!nombre) { showToast('Introduce el nombre del cliente'); return; }
+    if (!lineasAlbaran.length) { showToast('Añade al menos un producto'); return; }
+    const { subtotal, ivaPct, ivaImporte, total } = recalcularTotalesAlbaran();
+    const cliente = { nombre, nif: $('albCliNif').value.trim(), telefono: $('albCliTelefono').value.trim(), direccion: $('albCliDireccion').value.trim() };
+    const lineasFinal = lineasAlbaran.map(l => ({ codigo: l.codigo || '', nombre: l.nombre || '', peso: Number(l.peso) || 0, precio: Number(l.precio) || 0, importe: (Number(l.peso) || 0) * (Number(l.precio) || 0) }));
+    let docId = albaranEditandoId, numero;
+    const existing = docId ? albaranesCreados.find(a => a.id === docId) : null;
+    numero = existing ? existing.numero : (empresaConfig.ultimoNumero || 0) + 1;
+    const data = { numero, fecha: todayISO(), cliente, lineas: lineasFinal, subtotal, ivaPct, ivaImporte, total, updatedAt: serverTimestamp() };
+    if (docId) {
+      await setDoc(doc(db, 'users', uid, 'albaranesCreados', docId), data, { merge: true });
+    } else {
+      data.createdAt = serverTimestamp();
+      const ref = await addDoc(collection(db, 'users', uid, 'albaranesCreados'), data);
+      docId = ref.id;
+      empresaConfig.ultimoNumero = numero;
+      await saveEmpresaConfig();
+    }
+    const saved = { id: docId, ...data };
+    albaranesCreados = albaranesCreados.filter(a => a.id !== docId);
+    albaranesCreados.unshift(saved);
+    albaranEditandoId = docId;
+    renderHistorialAlbaranes();
+    showToast('Albarán guardado ✅');
+    if (triggerPrint) imprimirAlbaran(saved);
+  }
+  function buildAlbaranPrintHTML(a) {
+    const logoHtml = empresaConfig.logo ? `<img src="${empresaConfig.logo}" style="height:56px;object-fit:contain;">` : '';
+    const filas = a.lineas.map(l => `<tr style="border-bottom:1px solid #eee;"><td style="padding:6px 4px;">${l.codigo || ''}</td><td style="padding:6px 4px;">${l.nombre}</td><td style="text-align:right;padding:6px 4px;">${l.peso}</td><td style="text-align:right;padding:6px 4px;">${eur(l.precio)}</td><td style="text-align:right;padding:6px 4px;">${eur(l.importe)}</td></tr>`).join('');
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--c-primary);padding-bottom:16px;margin-bottom:20px;">
+        <div style="display:flex;gap:12px;align-items:center;">
+          ${logoHtml}
+          <div>
+            <p style="font-weight:800;font-size:18px;margin:0;">${empresaConfig.nombre || 'Tu Empresa'}</p>
+            <p style="font-size:11px;color:#555;margin:2px 0 0;">${empresaConfig.nif || ''}</p>
+            <p style="font-size:11px;color:#555;margin:0;">${empresaConfig.direccion || ''}</p>
+            <p style="font-size:11px;color:#555;margin:0;">${[empresaConfig.telefono, empresaConfig.email].filter(Boolean).join(' · ')}</p>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <p style="font-weight:800;font-size:20px;margin:0;color:var(--c-primary-dark);">ALBARÁN</p>
+          <p style="font-size:13px;margin:4px 0 0;">Nº ${a.numero}</p>
+          <p style="font-size:13px;margin:0;">${a.fecha}</p>
+        </div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <p style="font-size:10px;text-transform:uppercase;color:#888;font-weight:700;margin:0 0 4px;">Cliente</p>
+        <p style="font-weight:700;margin:0;">${a.cliente.nombre}</p>
+        <p style="font-size:12px;color:#555;margin:2px 0 0;">${a.cliente.nif || ''}</p>
+        <p style="font-size:12px;color:#555;margin:0;">${a.cliente.direccion || ''}</p>
+        <p style="font-size:12px;color:#555;margin:0;">${a.cliente.telefono || ''}</p>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:2px solid var(--c-primary);"><th style="text-align:left;padding:8px 4px;">Código</th><th style="text-align:left;padding:8px 4px;">Producto</th><th style="text-align:right;padding:8px 4px;">Peso/Cant.</th><th style="text-align:right;padding:8px 4px;">Precio</th><th style="text-align:right;padding:8px 4px;">Importe</th></tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+        <div style="width:220px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;"><span>Subtotal</span><span>${eur(a.subtotal)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;"><span>IVA (${a.ivaPct}%)</span><span>${eur(a.ivaImporte)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;padding:8px 0;border-top:2px solid var(--c-primary);margin-top:4px;"><span>TOTAL</span><span>${eur(a.total)}</span></div>
+        </div>
+      </div>
+      <p style="margin-top:40px;font-size:10px;color:#999;text-align:center;">Documento generado con Tótem&amp;GO</p>`;
+  }
+  function imprimirAlbaran(albaran) {
+    $('albaranPrintArea').innerHTML = buildAlbaranPrintHTML(albaran);
+    setTimeout(() => window.print(), 50);
+  }
+  function renderHistorialAlbaranes() {
+    const wrap = $('historialAlbaranesList'); if (!wrap) return;
+    const list = [...albaranesCreados].sort((a, b) => (b.numero || 0) - (a.numero || 0));
+    wrap.innerHTML = '';
+    $('historialAlbaranesEmpty').classList.toggle('hidden', list.length > 0);
+    list.forEach(a => {
+      const row = document.createElement('div');
+      row.className = 'rounded-xl bg-white dark:bg-carddark shadow-soft px-4 py-3 flex items-center justify-between gap-2';
+      row.innerHTML = `
+        <div class="min-w-0">
+          <p class="text-sm font-semibold truncate">Nº ${a.numero} · ${a.cliente.nombre}</p>
+          <p class="text-[11px] text-ink/40 dark:text-surface/40">${a.fecha} · ${eur(a.total)}</p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <button class="ver-alb text-xs font-bold underline" style="color:var(--c-primary-dark)">Imprimir</button>
+          <button class="del-alb text-red-500"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><use href="#ic-trash"/></svg></button>
+        </div>`;
+      row.querySelector('.ver-alb').addEventListener('click', () => imprimirAlbaran(a));
+      row.querySelector('.del-alb').addEventListener('click', async () => {
+        await deleteDoc(doc(db, 'users', uid, 'albaranesCreados', a.id));
+        albaranesCreados = albaranesCreados.filter(x => x.id !== a.id);
+        renderHistorialAlbaranes();
+        showToast('Albarán eliminado');
+      });
+      wrap.appendChild(row);
+    });
+  }
+  function openEmpresaModal() {
+    $('modalPanel').innerHTML = `
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-extrabold text-base">Datos de empresa</h3>
+        <button id="closeModal" class="text-ink/40 dark:text-surface/40 text-xl leading-none">&times;</button>
+      </div>
+      <div class="flex items-center gap-3 mb-4">
+        <label class="relative cursor-pointer shrink-0">
+          <div id="empLogoWrap" class="w-16 h-16 rounded-xl bg-surface dark:bg-surfacedark grid place-items-center overflow-hidden border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)]">${empresaConfig.logo ? `<img src="${empresaConfig.logo}" class="w-full h-full object-contain">` : `<svg class="w-6 h-6 text-ink/30" viewBox="0 0 24 24" fill="none"><use href="#ic-camera"/></svg>`}</div>
+          <input type="file" id="empLogoInput" accept="image/*" class="hidden">
+        </label>
+        <p class="text-xs text-ink/50 dark:text-surface/50 flex-1">Logo que aparecerá en tus albaranes impresos</p>
+      </div>
+      <div class="space-y-2.5">
+        <input id="empNombre" value="${empresaConfig.nombre || ''}" placeholder="Nombre de la empresa" class="w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm">
+        <input id="empNif" value="${empresaConfig.nif || ''}" placeholder="NIF / CIF" class="w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm">
+        <input id="empDireccion" value="${empresaConfig.direccion || ''}" placeholder="Dirección" class="w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm">
+        <input id="empTelefono" value="${empresaConfig.telefono || ''}" placeholder="Teléfono" class="w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm">
+        <input id="empEmail" value="${empresaConfig.email || ''}" placeholder="Email" class="w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm">
+        <div>
+          <label class="text-[11px] font-semibold text-ink/50 dark:text-surface/50">IVA por defecto (%)</label>
+          <input id="empIva" type="number" step="0.01" min="0" value="${empresaConfig.ivaDefault ?? 21}" class="mt-1 w-full rounded-xl border border-[var(--c-primary-100)] dark:border-[rgba(var(--c-primary-rgb),0.4)] bg-surface dark:bg-surfacedark px-3.5 py-2.5 text-sm">
+        </div>
+      </div>
+      <button id="btnGuardarEmpresa" class="w-full rounded-xl text-white font-bold py-2.5 mt-4" style="background:var(--c-primary)">Guardar</button>`;
+    $('closeModal').addEventListener('click', closeModal);
+    $('empLogoInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      showToast('Subiendo logo...');
+      const path = `logos/${uid}/logo_${Date.now()}_${file.name}`;
+      const r = sref(storage, path);
+      await uploadBytes(r, file);
+      empresaConfig.logo = await getDownloadURL(r);
+      $('empLogoWrap').innerHTML = `<img src="${empresaConfig.logo}" class="w-full h-full object-contain">`;
+      showToast('Logo actualizado ✅');
+    });
+    $('btnGuardarEmpresa').addEventListener('click', async () => {
+      empresaConfig.nombre = $('empNombre').value.trim();
+      empresaConfig.nif = $('empNif').value.trim();
+      empresaConfig.direccion = $('empDireccion').value.trim();
+      empresaConfig.telefono = $('empTelefono').value.trim();
+      empresaConfig.email = $('empEmail').value.trim();
+      empresaConfig.ivaDefault = parseFloat($('empIva').value) || 0;
+      await saveEmpresaConfig();
+      showToast('Datos de empresa guardados ✅');
+      closeModal();
+    });
+    $('modalOverlay').classList.remove('hidden');
+  }
+
+  // ==================== INIT ====================
+  function initUI() {
+    buildNav(); buildTiendaSubTabs(); buildDocSubTabs(); buildAlbaranSubTabs();
+    applyInicioOrder();
+    setView('inicio');
+    $('todayLabel').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    $('balHasta').value = todayISO(); $('balDesde').value = todayISO().slice(0, 8) + '01';
+
+    document.documentElement.classList.toggle('dark', !!profileConfig.modoOscuro);
+    refreshAvatarChip();
+    renderInicioHeader();
+    renderDashboard();
+    updateFichajeButtons();
+    renderProductos();
+    renderCostesTable();
+    renderVentasTable();
+    renderCalendar();
+    renderFavoritos();
+    wireStarButtons();
+    calcularBalance();
+    renderArchivos('albaranes');
+    renderArchivos('etiquetas');
+
+    if (esMaster) {
+      renderProductosDatalist();
+      resetAlbaranForm();
+      renderHistorialAlbaranes();
+      $('btnDatosEmpresa').addEventListener('click', openEmpresaModal);
+      $('btnAddLineaAlbaran').addEventListener('click', nuevaLineaAlbaran);
+      $('albIva').addEventListener('input', recalcularTotalesAlbaran);
+      $('btnNuevoAlbaranReset').addEventListener('click', resetAlbaranForm);
+      $('btnGuardarAlbaran').addEventListener('click', () => guardarAlbaran(false));
+      $('btnImprimirAlbaranActual').addEventListener('click', () => guardarAlbaran(true));
+    }
+
+    $('prodSearch').addEventListener('input', renderProductos);
+    $('btnNuevoProducto').addEventListener('click', newProducto);
+    $('btnEnviarProductos').addEventListener('click', enviarProductos);
+    $('btnImprimirProductos').addEventListener('click', () => window.print());
+
+    $('btnGuardarCostes').addEventListener('click', guardarTodosCostes);
+    $('btnGuardarVentas').addEventListener('click', guardarTodasVentas);
+
+    $('calPrev').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderCalendar(); });
+    $('calNext').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderCalendar(); });
+
+    $('btnEntrada').addEventListener('click', () => fichar('entrada'));
+    $('btnSalida').addEventListener('click', () => fichar('salida'));
+
+    $('btnConsultarBalance').addEventListener('click', calcularBalance);
+    $('btnExportExcel').addEventListener('click', exportarBalanceExcel);
+    $('btnExportChart').addEventListener('click', exportarGraficoPNG);
+
+    $('albaranInput').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) subirArchivo('albaranes', f); });
+    $('etiquetaInput').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) subirArchivo('etiquetas', f); });
+    $('btnOrdenAlbaranes').addEventListener('click', () => { ordenArchivosDesc.albaranes = !ordenArchivosDesc.albaranes; $('btnOrdenAlbaranes').textContent = ordenArchivosDesc.albaranes ? 'Más recientes' : 'Más antiguos'; renderArchivos('albaranes'); });
+    $('btnOrdenEtiquetas').addEventListener('click', () => { ordenArchivosDesc.etiquetas = !ordenArchivosDesc.etiquetas; $('btnOrdenEtiquetas').textContent = ordenArchivosDesc.etiquetas ? 'Más recientes' : 'Más antiguos'; renderArchivos('etiquetas'); });
+
+    $('btnNuevoEnlace').addEventListener('click', openEnlaceModal);
+    $('btnReordenarInicio').addEventListener('click', openReorderModal);
+  }
+</script>
+</body>
+</html>
