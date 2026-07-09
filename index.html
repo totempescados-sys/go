@@ -40,6 +40,13 @@
     font-variant-numeric: tabular-nums;
   }
   html, body { font-family: 'Plus Jakarta Sans', sans-serif; overscroll-behavior-y: none; }
+  /* En pantallas grandes (PC/portátil) agrandamos toda la interfaz. En móvil/tablet no cambia nada. */
+  @media (min-width: 1024px) {
+    body { zoom: 1.25; }
+  }
+  @media (min-width: 1440px) {
+    body { zoom: 1.4; }
+  }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-thumb { background: rgba(var(--c-primary-rgb),0.25); border-radius: 999px; }
   .no-scrollbar::-webkit-scrollbar{ display:none; }
